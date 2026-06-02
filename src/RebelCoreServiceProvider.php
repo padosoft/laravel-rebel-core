@@ -6,8 +6,10 @@ namespace Padosoft\Rebel\Core;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Padosoft\Rebel\Core\Clock\SystemClock;
 use Padosoft\Rebel\Core\Contracts\KeyedHasher;
 use Padosoft\Rebel\Core\Hashing\HmacKeyedHasher;
+use Psr\Clock\ClockInterface;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -29,6 +31,9 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        // Orologio PSR-20: in produzione SystemClock; i test possono rebindare un FakeClock.
+        $this->app->singleton(ClockInterface::class, SystemClock::class);
+
         $this->app->singleton(KeyedHasher::class, function (Application $app): HmacKeyedHasher {
             // make(Repository::class) è tipizzato da Larastan come Repository (niente @var).
             $config = $app->make(Repository::class);
