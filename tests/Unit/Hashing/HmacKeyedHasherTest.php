@@ -52,6 +52,10 @@ it('throws when hashing with an empty pepper', function (): void {
     (new HmacKeyedHasher([1 => ''], 1))->hash('value');
 })->throws(InvalidArgumentException::class);
 
+it('throws immediately for an unsupported HMAC algorithm', function (): void {
+    new HmacKeyedHasher([1 => 'pepper'], 1, 'notanalgo');
+})->throws(InvalidArgumentException::class);
+
 it('is resolvable from the container as KeyedHasher', function (): void {
     config()->set('rebel-core.peppers', [1 => 'container-pepper']);
     config()->set('rebel-core.pepper_current', 1);

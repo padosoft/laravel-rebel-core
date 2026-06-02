@@ -33,3 +33,11 @@ it('treats SMS as AAL2 but not phishing-resistant', function (): void {
         ->and($sms->satisfies(Aal::Aal2, requirePhishingResistant: true))->toBeFalse()
         ->and($sms->restricted)->toBeTrue();
 });
+
+it('rejects a restricted authenticator when the purpose forbids it', function (): void {
+    $sms = new AssuranceLevel(Aal::Aal2, phishingResistant: false, amr: ['sms'], restricted: true);
+    $totp = new AssuranceLevel(Aal::Aal2, phishingResistant: false, amr: ['totp']);
+
+    expect($sms->satisfies(Aal::Aal2, rejectRestricted: true))->toBeFalse()
+        ->and($totp->satisfies(Aal::Aal2, rejectRestricted: true))->toBeTrue();
+});

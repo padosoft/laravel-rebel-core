@@ -50,7 +50,11 @@ final readonly class EmailIdentifier implements AuthIdentifier, Stringable
     {
         [$local, $domain] = explode('@', $this->value, 2);
 
-        return mb_substr($local, 0, 1).'***@'.$domain;
+        // Con local part di 1 carattere, mostrare la prima lettera rivelerebbe TUTTA
+        // la parte locale: in quel caso mascheriamo completamente.
+        $maskedLocal = mb_strlen($local) <= 1 ? '***' : mb_substr($local, 0, 1).'***';
+
+        return $maskedLocal.'@'.$domain;
     }
 
     public function __toString(): string

@@ -18,6 +18,11 @@ it('exposes the email type', function (): void {
     expect(EmailIdentifier::from('a@b.it')->type())->toBe('email');
 });
 
+it('fully masks a single-character local part (no PII leak)', function (): void {
+    // 'a@example.it' NON deve diventare 'a***@...': rivelerebbe tutta la parte locale.
+    expect(EmailIdentifier::from('a@example.it')->masked())->toBe('***@example.it');
+});
+
 it('rejects invalid emails', function (string $bad): void {
     EmailIdentifier::from($bad);
 })->throws(InvalidArgumentException::class)->with([

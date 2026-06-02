@@ -35,14 +35,22 @@ final readonly class AssuranceLevel
      *
      * @param  Aal  $requiredAal  livello minimo richiesto
      * @param  bool  $requirePhishingResistant  se il purpose esige phishing-resistance
+     * @param  bool  $rejectRestricted  se il purpose vieta autenticatori "restricted" (es. SMS)
      */
-    public function satisfies(Aal $requiredAal, bool $requirePhishingResistant = false): bool
-    {
+    public function satisfies(
+        Aal $requiredAal,
+        bool $requirePhishingResistant = false,
+        bool $rejectRestricted = false,
+    ): bool {
         if (! $this->aal->satisfies($requiredAal)) {
             return false;
         }
 
         if ($requirePhishingResistant && ! $this->phishingResistant) {
+            return false;
+        }
+
+        if ($rejectRestricted && $this->restricted) {
             return false;
         }
 

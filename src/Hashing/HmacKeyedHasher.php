@@ -28,7 +28,13 @@ final class HmacKeyedHasher implements KeyedHasher
         private readonly array $peppers,
         private readonly int $currentVersion,
         private readonly string $algo = 'sha256',
-    ) {}
+    ) {
+        if (! in_array($this->algo, hash_hmac_algos(), true)) {
+            throw new InvalidArgumentException(
+                "Algoritmo HMAC non supportato: '{$this->algo}'. Usa uno tra: ".implode(', ', hash_hmac_algos()).'.'
+            );
+        }
+    }
 
     public function hash(string $value): HashedValue
     {
@@ -42,6 +48,9 @@ final class HmacKeyedHasher implements KeyedHasher
     {
         $pepper = $this->peppers[$keyVersion] ?? null;
 
+        // Nota timing: il return anticipato qui NON è un oracle. La keyVersion non è
+        // segreta — viene salvata in chiaro accanto all'hash — quindi distinguere
+        // "versione assente" da "hash diverso" non rivela nulla all'attaccante.
         if ($pepper === null || $pepper === '') {
             return false;
         }
