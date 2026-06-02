@@ -22,10 +22,11 @@ return new class extends Migration
             $table->string('subject_id')->nullable();
 
             // Identificatore e IP SEMPRE come HMAC (mai in chiaro) + versione pepper.
-            $table->char('identifier_hmac', 64)->nullable()->index();
+            // Dimensionati a 128 per supportare algoritmi più larghi di sha256 (es. sha512 = 128 hex).
+            $table->string('identifier_hmac', 128)->nullable()->index();
             $table->unsignedTinyInteger('key_version')->nullable();
-            $table->char('ip_hmac', 64)->nullable();
-            $table->char('user_agent_hash', 64)->nullable();
+            $table->string('ip_hmac', 128)->nullable();
+            $table->string('user_agent_hash', 128)->nullable();
 
             $table->string('channel')->nullable();
             $table->string('provider')->nullable();
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('risk_score')->nullable();
 
             // Hash-chain opzionale per audit immutabile (popolato solo se attivo).
-            $table->char('prev_hash', 64)->nullable();
+            $table->string('prev_hash', 128)->nullable();
 
             $table->json('metadata')->nullable();
 
