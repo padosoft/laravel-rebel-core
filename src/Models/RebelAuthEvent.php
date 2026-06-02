@@ -27,7 +27,9 @@ final class RebelAuthEvent extends Model
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    // Sola lettura via Eloquent: le scritture passano dal DatabaseAuditLogger
+    // (query builder). Nessun campo mass-assignable per sicurezza.
+    protected $fillable = [];
 
     /**
      * @return array<string, string>

@@ -16,6 +16,13 @@ use Padosoft\Rebel\Core\Identifiers\AuthIdentifier;
  * IP e User-Agent sono salvati come HMAC (mai in chiaro) per privacy/GDPR; l'hashing
  * è delegato al KeyedHasher (passato a fromRequest), così il VO resta puro e testabile.
  *
+ * Nota su rotazione: ip/ua usano la versione di pepper CORRENTE al momento della
+ * creazione. Quando si registra un AuditEvent, la sua singola `key_version` (quella
+ * dell'identifier, anch'esso hashato con la versione corrente) vale anche per ip/ua.
+ * La correlazione su ip_hmac/user_agent_hash è quindi valida ENTRO un'epoca di pepper;
+ * dopo una rotazione, gli hash vecchi non sono confrontabili con quelli nuovi (sono
+ * usati per correlazione/raggruppamento, non per autenticazione: limite accettato).
+ *
  * Esempio:
  *   $ctx = SecurityContext::fromRequest($request, $hasher)
  *       ->withGuard('customers')

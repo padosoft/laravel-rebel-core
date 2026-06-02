@@ -22,3 +22,21 @@ it('redacts sensitive keys recursively and keeps the rest', function (): void {
         ->and($clean['Authorization'])->toBe('[REDACTED]')
         ->and($clean['api_key'])->toBe('[REDACTED]');
 });
+
+it('does not over-redact diagnostic keys containing "code"', function (): void {
+    $clean = Redactor::sanitize([
+        'country_code' => 'IT',
+        'postal_code' => '20100',
+        'error_code' => 'E42',
+        'status_code' => 200,
+        'code' => '123456',          // chiave esatta "code" -> oscurata
+        'verification_code' => '999', // esatta -> oscurata
+    ]);
+
+    expect($clean['country_code'])->toBe('IT')
+        ->and($clean['postal_code'])->toBe('20100')
+        ->and($clean['error_code'])->toBe('E42')
+        ->and($clean['status_code'])->toBe(200)
+        ->and($clean['code'])->toBe('[REDACTED]')
+        ->and($clean['verification_code'])->toBe('[REDACTED]');
+});

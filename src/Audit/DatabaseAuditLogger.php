@@ -41,10 +41,22 @@ final class DatabaseAuditLogger implements AuditLogger
             'provider' => $event->provider,
             'purpose' => $event->purpose,
             'aal' => $event->aal?->value,
-            'amr' => $event->amr !== null ? json_encode($event->amr) : null,
+            'amr' => $event->amr !== null ? $this->json($event->amr) : null,
             'risk_score' => $event->riskScore,
-            'metadata' => json_encode(Redactor::sanitize($event->metadata)),
+            'metadata' => $this->json(Redactor::sanitize($event->metadata)),
             'created_at' => $this->clock->now()->format('Y-m-d H:i:s'),
         ]);
+    }
+
+    /**
+     * Codifica JSON robusta per l'audit: sostituisce gli UTF-8 invalidi (invece di
+     * ritornare false e corrompere la riga) e ha un fallback. L'audit non deve MAI
+     * far fallire il flusso applicativo.
+     *
+     * @param  array<array-key, mixed>  $value
+     */
+    private function json(array $value): string
+    {
+        return json_encode($value, JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
     }
 }

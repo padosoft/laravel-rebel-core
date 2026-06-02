@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Queue\Events\JobProcessing;
 use Padosoft\Rebel\Core\Audit\DatabaseAuditLogger;
 use Padosoft\Rebel\Core\Clock\SystemClock;
 use Padosoft\Rebel\Core\Config\CoreConfigValidator;
@@ -79,5 +81,14 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
         // Tenant corrente (lo imposta il TenantResolver dell'app) + validatori di config.
         $this->app->singleton(CurrentTenant::class);
         $this->app->tag([CoreConfigValidator::class], 'rebel.config_validators');
+    }
+
+    public function packageBooted(): void
+    {
+        // Evita il cross-tenant leakage tra job nello stesso worker long-running:
+        // azzera il tenant corrente PRIMA di processare ogni job.
+        $this->app->make(Dispatcher::class)->listen(JobProcessing::class, function (): void {
+            $this->app->make(CurrentTenant::class)->reset();
+        });
     }
 }

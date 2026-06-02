@@ -22,4 +22,14 @@ final class CurrentTenant
     {
         $this->id = $id;
     }
+
+    /**
+     * Azzera il tenant corrente. FONDAMENTALE nei worker di coda long-running:
+     * il provider lo invoca all'inizio di ogni job per evitare che un job erediti
+     * il tenant di quello precedente (cross-tenant leakage).
+     */
+    public function reset(): void
+    {
+        $this->id = null;
+    }
 }
