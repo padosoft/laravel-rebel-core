@@ -6,7 +6,10 @@ namespace Padosoft\Rebel\Core;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\DatabaseManager;
+use Padosoft\Rebel\Core\Audit\DatabaseAuditLogger;
 use Padosoft\Rebel\Core\Clock\SystemClock;
+use Padosoft\Rebel\Core\Contracts\AuditLogger;
 use Padosoft\Rebel\Core\Contracts\KeyedHasher;
 use Padosoft\Rebel\Core\Hashing\HmacKeyedHasher;
 use Psr\Clock\ClockInterface;
@@ -26,7 +29,8 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('laravel-rebel-core')
-            ->hasConfigFile('rebel-core');
+            ->hasConfigFile('rebel-core')
+            ->hasMigration('create_rebel_auth_events_table');
     }
 
     public function packageRegistered(): void
@@ -58,6 +62,13 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
                 peppers: $peppers,
                 currentVersion: is_int($current) ? $current : 1,
                 algo: is_string($algo) ? $algo : 'sha256',
+            );
+        });
+
+        $this->app->singleton(AuditLogger::class, function (Application $app): DatabaseAuditLogger {
+            return new DatabaseAuditLogger(
+                $app->make(DatabaseManager::class)->connection(),
+                $app->make(ClockInterface::class),
             );
         });
     }

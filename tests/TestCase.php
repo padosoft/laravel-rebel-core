@@ -20,4 +20,18 @@ abstract class TestCase extends Orchestra
             RebelCoreServiceProvider::class,
         ];
     }
+
+    /**
+     * @param  Application  $app
+     */
+    protected function defineEnvironment($app): void
+    {
+        // SQLite in-memory per i test che toccano il DB (audit).
+        $app['config']->set('database.default', 'testing');
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
 }
