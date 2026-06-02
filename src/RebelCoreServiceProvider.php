@@ -9,9 +9,12 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\DatabaseManager;
 use Padosoft\Rebel\Core\Audit\DatabaseAuditLogger;
 use Padosoft\Rebel\Core\Clock\SystemClock;
+use Padosoft\Rebel\Core\Config\CoreConfigValidator;
+use Padosoft\Rebel\Core\Console\ValidateConfigCommand;
 use Padosoft\Rebel\Core\Contracts\AuditLogger;
 use Padosoft\Rebel\Core\Contracts\KeyedHasher;
 use Padosoft\Rebel\Core\Hashing\HmacKeyedHasher;
+use Padosoft\Rebel\Core\Tenancy\CurrentTenant;
 use Psr\Clock\ClockInterface;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -30,7 +33,8 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-rebel-core')
             ->hasConfigFile('rebel-core')
-            ->hasMigration('create_rebel_auth_events_table');
+            ->hasMigration('create_rebel_auth_events_table')
+            ->hasCommand(ValidateConfigCommand::class);
     }
 
     public function packageRegistered(): void
@@ -71,5 +75,9 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
                 $app->make(ClockInterface::class),
             );
         });
+
+        // Tenant corrente (lo imposta il TenantResolver dell'app) + validatori di config.
+        $this->app->singleton(CurrentTenant::class);
+        $this->app->tag([CoreConfigValidator::class], 'rebel.config_validators');
     }
 }
