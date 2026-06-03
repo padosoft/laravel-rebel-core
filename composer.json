@@ -1,6 +1,6 @@
 {
     "name": "padosoft/laravel-rebel-core",
-    "description": "Core primitives, value objects e contratti per Laravel Rebel: il control plane di autenticazione enterprise (assurance AAL/AMR, security context, audit, token Sanctum, rate-limiting). Porta d'ingresso dell'ecosistema padosoft/laravel-rebel-*.",
+    "description": "Core primitives, value objects and contracts for Laravel Rebel: the enterprise authentication control plane (AAL/AMR assurance, security context, audit, Sanctum tokens, rate-limiting). The entry point of the padosoft/laravel-rebel-* ecosystem.",
     "keywords": ["laravel", "authentication", "security", "otp", "passwordless", "step-up", "mfa", "passkey", "padosoft", "rebel"],
     "homepage": "https://github.com/padosoft/laravel-rebel-core",
     "license": "MIT",
