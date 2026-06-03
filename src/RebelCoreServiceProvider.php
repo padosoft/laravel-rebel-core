@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Padosoft\Rebel\Core;
 
+use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Queue\Events\JobProcessing;
+use Padosoft\Rebel\Core\Audit\ContextEnrichingAuditLogger;
 use Padosoft\Rebel\Core\Audit\DatabaseAuditLogger;
+use Padosoft\Rebel\Core\Audit\QueuedAuditLogger;
 use Padosoft\Rebel\Core\Clock\SystemClock;
 use Padosoft\Rebel\Core\Config\CoreConfigValidator;
 use Padosoft\Rebel\Core\Console\ValidateConfigCommand;
@@ -71,16 +74,42 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(AuditLogger::class, function (Application $app): DatabaseAuditLogger {
+        // The synchronous writer is always resolvable on its own (the queued job uses it).
+        $this->app->singleton(DatabaseAuditLogger::class, function (Application $app): DatabaseAuditLogger {
             return new DatabaseAuditLogger(
                 $app->make(DatabaseManager::class)->connection(),
                 $app->make(ClockInterface::class),
             );
         });
 
+        // The public AuditLogger is a context-enriching decorator over either the
+        // synchronous writer or a queued writer, selected by `rebel-core.audit.mode`.
+        // Configurable sync|queue dispatch (Horizon-compatible) + a configurable
+        // destination — capture is turnkey, the "how/where" is the integrator's call.
+        $this->app->singleton(AuditLogger::class, function (Application $app): AuditLogger {
+            $config = $app->make(Repository::class);
+
+            $mode = $config->get('rebel-core.audit.mode', 'sync');
+            $inner = $mode === 'queue'
+                ? new QueuedAuditLogger(
+                    $app->make(BusDispatcher::class),
+                    $this->stringOrNull($config->get('rebel-core.audit.connection')),
+                    $this->stringOrNull($config->get('rebel-core.audit.queue')),
+                )
+                : $app->make(DatabaseAuditLogger::class);
+
+            return new ContextEnrichingAuditLogger($inner, $config, $app);
+        });
+
         // Current tenant (set by the app's TenantResolver) + config validators.
         $this->app->singleton(CurrentTenant::class);
         $this->app->tag([CoreConfigValidator::class], 'rebel.config_validators');
+    }
+
+    /** Coerce a config value to a non-empty string, or null. */
+    private function stringOrNull(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     public function packageBooted(): void

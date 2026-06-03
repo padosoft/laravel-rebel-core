@@ -38,6 +38,9 @@ return new class extends Migration
 
             $table->unsignedTinyInteger('risk_score')->nullable();
 
+            // ISO 3166-1 alpha-2 country, derived from a request header (e.g. CF-IPCountry).
+            $table->string('country', 2)->nullable();
+
             // Optional hash-chain for an immutable audit (populated only if enabled).
             $table->string('prev_hash', 128)->nullable();
 

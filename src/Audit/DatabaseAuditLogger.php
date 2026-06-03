@@ -43,6 +43,7 @@ final class DatabaseAuditLogger implements AuditLogger
             'aal' => $event->aal?->value,
             'amr' => $event->amr !== null ? $this->json($event->amr) : null,
             'risk_score' => $event->riskScore,
+            'country' => $event->country,
             'metadata' => $this->json(Redactor::sanitize($event->metadata)),
             'created_at' => $this->clock->now()->format('Y-m-d H:i:s'),
         ]);
