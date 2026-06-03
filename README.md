@@ -244,6 +244,32 @@ File: `config/rebel-core.php`
 | `hmac_algo` | `sha256` | HMAC algorithm | Rarely; it must be supported by PHP |
 | `hash_ip` | `true` | Stores the IP as an HMAC (never in cleartext) | Leave it `true` for GDPR |
 | `hash_user_agent` | `true` | Stores the User-Agent as an HMAC | Leave it `true` for GDPR |
+| `audit.mode` | `sync` | How events are written: `sync` (inline) or `queue` (a job per event) | Set `queue` for high volume / enterprise |
+| `audit.connection` / `audit.queue` | `null` | Queue connection + name for `mode=queue` (Horizon-compatible) | Point at a dedicated audit queue |
+| `geo.enabled` | `true` | Record the request country on every event | Disable if you don't want geo |
+| `geo.country_header` | `CF-IPCountry` | Request header the country is read from | Point at your proxy's header (Cloudflare sets `CF-IPCountry`) |
+
+**Audit dispatch (sync vs queued) — capture is turnkey, you choose how/where.** Every package in
+the suite records through the **same** `AuditLogger` contract, which **always persists** to
+`rebel_auth_events` (never just in session). By default the write is synchronous; for high-volume
+/ enterprise workloads, switch to a queued write (works directly with **Horizon** and any Laravel
+queue) — the event is fully enriched (country, etc.) before it is queued, so nothing is lost:
+
+```php
+// config/rebel-core.php
+'audit' => [
+    'mode' => 'queue',                 // 'sync' (default) | 'queue'
+    'connection' => 'redis',           // null = the app's default queue connection
+    'queue' => 'rebel-audit',          // a dedicated queue is nice for Horizon dashboards
+],
+```
+
+The **destination** is the bound `AuditLogger` / `DatabaseAuditLogger` (table + DB connection) —
+rebind it to send the trail anywhere you like.
+
+**Country enrichment.** The audit records the request country (ISO 3166-1 alpha-2), read from a
+request header. Put **Cloudflare** in front and it sets `CF-IPCountry` for you (clean, accurate,
+no extra service); behind another proxy, point `geo.country_header` at whatever it sets.
 
 **Pepper rotation (example):**
 ```php
