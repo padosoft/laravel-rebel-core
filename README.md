@@ -143,20 +143,23 @@ The core is **small and stable**: it defines the shared "language". It contains:
 
 There is no drop-in package that gives you a **shared auth "core" / contracts layer** with first-class NIST assurance, keyed hashing with rotation and built-in audit redaction. The realistic alternatives are: building these primitives **by hand**, relying on **framework-native** auth only, or pulling in a heavier all-in-one bundle. Here is how they compare for a shared core that the rest of an auth suite can build on.
 
-| Capability | **Rebel Core** | Hand-rolled primitives | Fortify (framework-native) | Spatie permission/multitenancy |
-|---|:---:|:---:|:---:|:---:|
-| First-class NIST AAL/AMR assurance model | ✅ | ❌ | ❌ | ❌ |
-| `satisfies()` guard (blocks email-OTP on phishing-resistant purposes) | ✅ | ❌ | ❌ | ❌ |
-| Keyed HMAC hashing with **versioned pepper + rotation** | ✅ | ❌ | ❌ | ❌ |
-| Audit trail with **automatic secret redaction** | ✅ | ❌ | ❌ | ❌ |
-| GDPR-safe IP/UA stored as keyed HMAC (never cleartext) | ✅ | ❌ | ❌ | ❌ |
-| Web/mobile `LoginResult` + Sanctum `TokenPair` contract | ✅ | ❌ | ❌ | ❌ |
-| Per-tenant isolation trait + safe queue worker reset | ✅ | ❌ | ❌ | ✅ |
-| PSR-20 testable `Clock` for OTP/step-up expirations | ✅ | ❌ | ❌ | ❌ |
-| Stable contracts to swap implementations (channels, risk, sessions) | ✅ | ❌ | ❌ | ❌ |
-| `validate-config` fail-fast command for CI | ✅ | ❌ | ❌ | ❌ |
-| Zero hard dependency on Fortify/Twilio/AI | ✅ | ✅ | ❌ | ✅ |
-| Login/registration/password-reset screens | ❌ (by design) | ❌ | ✅ | ❌ |
+| Capability | **Rebel Core** | Shopify | Hand-rolled primitives | Fortify (framework-native) | Spatie permission/multitenancy |
+|---|:---:|:---:|:---:|:---:|:---:|
+| First-class NIST AAL/AMR assurance model | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `satisfies()` guard (blocks email-OTP on phishing-resistant purposes) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Keyed HMAC hashing with **versioned pepper + rotation** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Audit trail with **automatic secret redaction** | ✅ | ➖ | ❌ | ❌ | ❌ |
+| GDPR-safe IP/UA stored as keyed HMAC (never cleartext) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Web/mobile `LoginResult` + Sanctum `TokenPair` contract | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Per-tenant isolation trait + safe queue worker reset | ✅ | ❌ | ❌ | ❌ | ✅ |
+| PSR-20 testable `Clock` for OTP/step-up expirations | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Stable contracts to swap implementations (channels, risk, sessions) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `validate-config` fail-fast command for CI | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Zero hard dependency on Fortify/Twilio/AI | ✅ | ➖ | ✅ | ❌ | ✅ |
+| Login/registration/password-reset screens | ❌ (by design) | ✅ | ❌ | ✅ | ❌ |
+
+> Legend: ✅ built-in · ➖ partial / hosted-only / not exposed to you · ❌ not available.
+> Note on Shopify: it is a **hosted, closed commerce platform** — you can't self-host it, extend its auth internals, or reuse these low-level primitives in your own Laravel app; it's a black box you don't control, so most developer-facing rows are ❌/➖.
 
 > Honest take: Fortify and the Spatie packages are excellent at what they do — Fortify ships the actual auth screens, Spatie handles permissions/multitenancy. Rebel Core is **not** competing on those; it provides the assurance/audit/hashing/contracts substrate they don't, and it stays unopinionated so you can layer the rest of the suite (or Fortify itself, via `bridge-fortify`) on top.
 
