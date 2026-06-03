@@ -7,12 +7,12 @@ namespace Padosoft\Rebel\Core\Assurance;
 /**
  * Authenticator Assurance Level (NIST SP 800-63B-4).
  *
- *  - AAL1: un solo fattore (anche un solo OTP). Es. login email-OTP B2C.
- *  - AAL2: due fattori distinti e deve offrire un'opzione phishing-resistant.
- *  - AAL3: chiave hardware, solo phishing-resistant.
+ *  - AAL1: a single factor (even just one OTP). E.g. B2C email-OTP login.
+ *  - AAL2: two distinct factors and it must offer a phishing-resistant option.
+ *  - AAL3: hardware key, phishing-resistant only.
  *
- * Glossario: "phishing-resistant" = non rigiocabile su un sito di phishing
- * (solo passkey/FIDO2; email-OTP e SMS NON lo sono).
+ * Glossary: "phishing-resistant" = not replayable on a phishing site
+ * (only passkey/FIDO2; email-OTP and SMS are NOT).
  */
 enum Aal: string
 {
@@ -20,7 +20,7 @@ enum Aal: string
     case Aal2 = 'aal2';
     case Aal3 = 'aal3';
 
-    /** Rango numerico per i confronti (più alto = più forte). */
+    /** Numeric rank for comparisons (higher = stronger). */
     public function rank(): int
     {
         return match ($this) {
@@ -30,7 +30,7 @@ enum Aal: string
         };
     }
 
-    /** True se questo livello soddisfa (>=) il livello richiesto. */
+    /** True if this level satisfies (>=) the required level. */
     public function satisfies(self $required): bool
     {
         return $this->rank() >= $required->rank();

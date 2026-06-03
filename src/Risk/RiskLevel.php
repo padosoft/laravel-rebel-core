@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Risk;
 
 /**
- * Livello di rischio qualitativo derivato dallo score numerico.
+ * Qualitative risk level derived from the numeric score.
  *
- * Soglie di default (configurabili a valle): 0-19 Low, 20-49 Medium,
+ * Default thresholds (configurable downstream): 0-19 Low, 20-49 Medium,
  * 50-79 High, 80-100 Critical.
  */
 enum RiskLevel: string

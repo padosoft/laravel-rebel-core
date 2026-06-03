@@ -10,10 +10,10 @@ use Padosoft\Rebel\Core\Contracts\ConfigValidator;
 /**
  * `php artisan rebel:validate-config`
  *
- * Esegue tutti i validatori registrati nel tag 'rebel.config_validators' e fallisce
- * (exit code != 0) se la configurazione non è valida. Pensato per girare in CI/deploy
- * così gli errori di config (es. pepper vuoto, purpose con driver sotto assurance)
- * si vedono SUBITO e non a runtime.
+ * Runs all validators registered under the 'rebel.config_validators' tag and fails
+ * (exit code != 0) if the configuration is invalid. Meant to run in CI/deploy so
+ * config errors (e.g. empty pepper, purpose with a driver below assurance) are
+ * caught IMMEDIATELY and not at runtime.
  */
 final class ValidateConfigCommand extends Command
 {

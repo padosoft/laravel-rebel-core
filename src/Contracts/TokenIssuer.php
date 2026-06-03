@@ -9,14 +9,15 @@ use Padosoft\Rebel\Core\Auth\TokenPair;
 use Padosoft\Rebel\Core\Context\SecurityContext;
 
 /**
- * Emette i token per i client headless/mobile. È un WRAPPER attorno all'estensione
- * Sanctum interna (access "session" token + refresh token): il core non conosce i
- * dettagli, chiede solo l'emissione. Il token dovrebbe portare il claim tenant_id.
+ * Issues tokens for headless/mobile clients. It is a WRAPPER around the internal
+ * Sanctum extension ("session" access token + refresh token): the core does not
+ * know the details, it only requests issuance. The token should carry the
+ * tenant_id claim.
  */
 interface TokenIssuer
 {
     public function issue(Authenticatable $user, SecurityContext $context): TokenPair;
 
-    /** Revoca tutti i token del subject ("logout everywhere"). Ritorna quanti revocati. */
+    /** Revokes all of the subject's tokens ("logout everywhere"). Returns how many were revoked. */
     public function revokeAll(Authenticatable $user): int;
 }

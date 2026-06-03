@@ -8,8 +8,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Padosoft\Rebel\Core\Context\DeviceContext;
 
 /**
- * Gestisce i dispositivi "fidati" (remembered device) per ridurre l'attrito dello
- * step-up. Un device fidato decade dopo N giorni o su segnali di rischio.
+ * Manages "trusted" devices (remembered device) to reduce step-up friction.
+ * A trusted device expires after N days or on risk signals.
  */
 interface DeviceTrust
 {

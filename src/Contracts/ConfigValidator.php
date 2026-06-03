@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Contracts;
 
 /**
- * Un validatore di configurazione Rebel. Ogni package (core, step-up, channels...)
- * registra il proprio nel tag 'rebel.config_validators'; il comando
- * `rebel:validate-config` li esegue tutti e fallisce se trova errori (fail-fast).
+ * A Rebel configuration validator. Each package (core, step-up, channels...)
+ * registers its own under the 'rebel.config_validators' tag; the
+ * `rebel:validate-config` command runs them all and fails on errors (fail-fast).
  */
 interface ConfigValidator
 {
-    /** Nome breve del validatore (es. 'core', 'step-up'). */
+    /** Short name of the validator (e.g. 'core', 'step-up'). */
     public function name(): string;
 
     /**
-     * Esegue la validazione e ritorna la lista degli errori (vuota = config valida).
+     * Runs the validation and returns the list of errors (empty = valid config).
      *
      * @return list<string>
      */

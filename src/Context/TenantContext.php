@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Context;
 
 /**
- * Il tenant corrente (es. sito/brand/nazione in un ecommerce multi-tenant).
+ * The current tenant (e.g. site/brand/country in a multi-tenant ecommerce).
  *
- * `id` è l'identificativo del tenant; `attributes` porta metadati utili a policy
- * e audit (es. ['nazione' => 'IT', 'brand' => 'acme']).
+ * `id` is the tenant identifier; `attributes` carries metadata useful for policies
+ * and audit (e.g. ['country' => 'IT', 'brand' => 'acme']).
  */
 final readonly class TenantContext
 {

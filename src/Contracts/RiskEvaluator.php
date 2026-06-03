@@ -8,8 +8,8 @@ use Padosoft\Rebel\Core\Context\SecurityContext;
 use Padosoft\Rebel\Core\Risk\RiskAssessment;
 
 /**
- * Valuta il rischio di un contesto e produce un RiskAssessment (score + reasons +
- * azione consigliata). Deterministico di default; l'app può fornire segnali custom.
+ * Evaluates the risk of a context and produces a RiskAssessment (score + reasons +
+ * recommended action). Deterministic by default; the app can provide custom signals.
  */
 interface RiskEvaluator
 {

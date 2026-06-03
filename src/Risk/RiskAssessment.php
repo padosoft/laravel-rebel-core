@@ -7,15 +7,15 @@ namespace Padosoft\Rebel\Core\Risk;
 use InvalidArgumentException;
 
 /**
- * Output standard del risk engine.
+ * Standard output of the risk engine.
  *
- *  - score (0-100): più alto = più rischioso;
- *  - level: la fascia qualitativa derivata dallo score;
- *  - reasons: codici machine-readable (es. 'new_device', 'impossible_travel'),
- *    NON testi tradotti (le label umane stanno nei file di traduzione);
- *  - recommendedAction: suggerimento (allow/step_up/block/review).
+ *  - score (0-100): higher = riskier;
+ *  - level: the qualitative band derived from the score;
+ *  - reasons: machine-readable codes (e.g. 'new_device', 'impossible_travel'),
+ *    NOT translated text (human labels live in the translation files);
+ *  - recommendedAction: suggestion (allow/step_up/block/review).
  *
- * Esempio:
+ * Example:
  *   RiskAssessment::fromScore(65, ['new_device', 'high_value_order'], RecommendedAction::StepUp);
  */
 final readonly class RiskAssessment

@@ -7,17 +7,17 @@ namespace Padosoft\Rebel\Core\Contracts;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Registro di sessioni/dispositivi del subject. Implementato dal package sessions.
- * Qui nel core c'è solo il contratto stabile usato da OTP/step-up.
+ * Registry of the subject's sessions/devices. Implemented by the sessions package.
+ * Here in the core there is only the stable contract used by OTP/step-up.
  */
 interface SessionRegistry
 {
-    /** Revoca tutte le sessioni/token del subject. Ritorna quante ne ha revocate. */
+    /** Revokes all of the subject's sessions/tokens. Returns how many were revoked. */
     public function revokeAll(Authenticatable $user): int;
 
     /**
-     * True se questo refresh token risulta GIÀ consumato (reuse detection):
-     * un riuso indica furto del token → la catena va revocata.
+     * True if this refresh token has ALREADY been consumed (reuse detection):
+     * a reuse indicates token theft → the chain must be revoked.
      */
     public function isRefreshReused(string $refreshTokenId): bool;
 }

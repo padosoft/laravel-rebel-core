@@ -34,7 +34,7 @@ it('matches a value against its stored hash (constant-time)', function (): void 
 it('supports key rotation: a hash made with an old version still verifies', function (): void {
     $old = (new HmacKeyedHasher([1 => 'pepper-v1'], 1))->hash('value');
 
-    // Il corrente è v2, ma v1 resta nel registro per la verifica.
+    // The current is v2, but v1 stays in the registry for verification.
     $rotated = new HmacKeyedHasher([1 => 'pepper-v1', 2 => 'pepper-v2'], 2);
 
     expect($rotated->hash('value')->keyVersion)->toBe(2)

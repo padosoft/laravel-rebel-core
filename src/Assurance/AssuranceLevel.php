@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Assurance;
 
 /**
- * L'assurance prodotta da un driver di autenticazione/step-up, oppure richiesta
- * da un "purpose" (azione protetta).
+ * The assurance produced by an authentication/step-up driver, or required by a
+ * "purpose" (protected action).
  *
- *  - aal:               il livello NIST raggiunto/richiesto;
- *  - phishingResistant: true solo per passkey/FIDO2;
- *  - amr:               Authentication Methods References, es. ['webauthn'] | ['otp','email'] | ['sms'];
- *  - restricted:        true per autenticatori "restricted" (es. SMS) — vedi NIST.
+ *  - aal:               the NIST level reached/required;
+ *  - phishingResistant: true only for passkey/FIDO2;
+ *  - amr:               Authentication Methods References, e.g. ['webauthn'] | ['otp','email'] | ['sms'];
+ *  - restricted:        true for "restricted" authenticators (e.g. SMS) — see NIST.
  *
- * Esempio (driver passkey):
+ * Example (passkey driver):
  *   new AssuranceLevel(Aal::Aal2, phishingResistant: true, amr: ['webauthn']);
  *
- * Il resolver step-up usa satisfies() per RIFIUTARE driver sotto la soglia del purpose.
+ * The step-up resolver uses satisfies() to REJECT drivers below the purpose threshold.
  */
 final readonly class AssuranceLevel
 {
@@ -31,11 +31,11 @@ final readonly class AssuranceLevel
     ) {}
 
     /**
-     * Questo livello soddisfa i requisiti del purpose?
+     * Does this level satisfy the purpose requirements?
      *
-     * @param  Aal  $requiredAal  livello minimo richiesto
-     * @param  bool  $requirePhishingResistant  se il purpose esige phishing-resistance
-     * @param  bool  $rejectRestricted  se il purpose vieta autenticatori "restricted" (es. SMS)
+     * @param  Aal  $requiredAal  minimum required level
+     * @param  bool  $requirePhishingResistant  whether the purpose demands phishing-resistance
+     * @param  bool  $rejectRestricted  whether the purpose forbids "restricted" authenticators (e.g. SMS)
      */
     public function satisfies(
         Aal $requiredAal,

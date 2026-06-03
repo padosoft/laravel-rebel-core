@@ -18,7 +18,7 @@ it('lets a passkey satisfy a high-assurance phishing-resistant purpose', functio
 });
 
 it('blocks email-OTP (AAL1, not phishing-resistant) on a high-assurance purpose', function (): void {
-    // Questa è LA regola di sicurezza centrale: email-OTP non basta da solo per azioni forti.
+    // This is THE central security rule: email-OTP alone is not enough for strong actions.
     $emailOtp = new AssuranceLevel(Aal::Aal1, phishingResistant: false, amr: ['otp', 'email']);
 
     expect($emailOtp->satisfies(Aal::Aal2, requirePhishingResistant: true))->toBeFalse()

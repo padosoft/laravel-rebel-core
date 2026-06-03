@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Support;
 
 /**
- * Oscura i campi sensibili prima di scriverli (audit/log). Regola d'oro Rebel:
- * MAI OTP/secret/token/password nei log. Il match è per sottostringa, case-insensitive,
- * e ricorsivo sugli array annidati.
+ * Redacts sensitive fields before writing them (audit/log). Rebel golden rule:
+ * NEVER OTP/secret/token/password in the logs. The match is by substring,
+ * case-insensitive, and recursive over nested arrays.
  *
  *   Redactor::sanitize(['otp' => '123456', 'attempt' => 1]);
  *   // ['otp' => '[REDACTED]', 'attempt' => 1]
@@ -15,7 +15,7 @@ namespace Padosoft\Rebel\Core\Support;
 final class Redactor
 {
     /**
-     * Termini sensibili cercati come SOTTOSTRINGA (chiaramente segreti).
+     * Sensitive terms searched as a SUBSTRING (clearly secrets).
      *
      * @var list<string>
      */
@@ -25,8 +25,8 @@ final class Redactor
     ];
 
     /**
-     * Chiavi sensibili confrontate in modo ESATTO. Termini corti/ambigui come
-     * 'code' qui NON oscurano 'country_code'/'postal_code'/'error_code' ecc.
+     * Sensitive keys compared EXACTLY. Short/ambiguous terms like 'code' here do
+     * NOT redact 'country_code'/'postal_code'/'error_code' etc.
      *
      * @var list<string>
      */

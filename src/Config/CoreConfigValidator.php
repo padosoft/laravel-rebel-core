@@ -8,8 +8,8 @@ use Illuminate\Contracts\Config\Repository;
 use Padosoft\Rebel\Core\Contracts\ConfigValidator;
 
 /**
- * Valida la config del core: la versione di pepper corrente deve esistere e non
- * essere vuota (altrimenti gli HMAC non sono sicuri / l'app si rompe a runtime).
+ * Validates the core config: the current pepper version must exist and not be
+ * empty (otherwise the HMACs are not secure / the app breaks at runtime).
  */
 final class CoreConfigValidator implements ConfigValidator
 {

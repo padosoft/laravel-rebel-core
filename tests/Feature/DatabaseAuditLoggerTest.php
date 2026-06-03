@@ -33,6 +33,6 @@ it('records an event on rebel_auth_events and redacts sensitive metadata', funct
 
     expect(json_decode((string) $row->amr, true))->toBe(['otp', 'email']);
 
-    // L'OTP in chiaro non deve MAI comparire nella riga salvata.
+    // The cleartext OTP must NEVER appear in the saved row.
     expect(DB::table('rebel_auth_events')->where('metadata', 'like', '%123456%')->count())->toBe(0);
 });

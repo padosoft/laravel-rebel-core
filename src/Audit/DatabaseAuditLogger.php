@@ -11,10 +11,10 @@ use Padosoft\Rebel\Core\Support\Redactor;
 use Psr\Clock\ClockInterface;
 
 /**
- * Audit logger di default: scrive su `rebel_auth_events`.
+ * Default audit logger: writes to `rebel_auth_events`.
  *
- * I metadata vengono SEMPRE sanitizzati (Redactor) prima di salvare: niente
- * OTP/secret nel DB. Il tempo viene dal Clock (testabile).
+ * Metadata is ALWAYS sanitized (Redactor) before saving: no OTP/secret in the
+ * DB. The time comes from the Clock (testable).
  */
 final class DatabaseAuditLogger implements AuditLogger
 {
@@ -49,9 +49,9 @@ final class DatabaseAuditLogger implements AuditLogger
     }
 
     /**
-     * Codifica JSON robusta per l'audit: sostituisce gli UTF-8 invalidi (invece di
-     * ritornare false e corrompere la riga) e ha un fallback. L'audit non deve MAI
-     * far fallire il flusso applicativo.
+     * Robust JSON encoding for the audit: substitutes invalid UTF-8 (instead of
+     * returning false and corrupting the row) and has a fallback. The audit must
+     * NEVER break the application flow.
      *
      * @param  array<array-key, mixed>  $value
      */

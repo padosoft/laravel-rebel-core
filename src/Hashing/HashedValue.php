@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Hashing;
 
 /**
- * Risultato di un hashing "keyed": l'hash + la versione di pepper usata.
+ * Result of a "keyed" hashing: the hash + the pepper version used.
  *
- * La `keyVersion` va salvata accanto all'hash così, quando si ruota il pepper,
- * si sa con quale versione ricalcolare/verificare (vedi KeyedHasher).
+ * The `keyVersion` must be stored alongside the hash so that, when the pepper is
+ * rotated, you know which version to recompute/verify with (see KeyedHasher).
  */
 final readonly class HashedValue
 {

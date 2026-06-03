@@ -7,11 +7,11 @@ namespace Padosoft\Rebel\Core\Audit;
 use Padosoft\Rebel\Core\Assurance\Aal;
 
 /**
- * Un evento di sicurezza/auth da registrare nell'audit trail.
+ * A security/auth event to record in the audit trail.
  *
- * Regole d'oro: MAI dati in chiaro che siano sensibili (l'identificatore è già
- * un HMAC, l'IP è un HMAC, NIENTE OTP/secret nei metadata). `type` è una stringa
- * libera (usa AuthEventType::value per i tipi comuni). `metadata` è JSON-safe.
+ * Golden rules: NEVER any sensitive cleartext data (the identifier is already an
+ * HMAC, the IP is an HMAC, NO OTP/secret in the metadata). `type` is a free-form
+ * string (use AuthEventType::value for common types). `metadata` is JSON-safe.
  *
  *   new AuditEvent(
  *       type: AuthEventType::EmailOtpVerified->value,

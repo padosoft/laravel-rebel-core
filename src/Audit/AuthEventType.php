@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Audit;
 
 /**
- * Tipi di evento di audit più comuni (comodità: il tipo in AuditEvent è una stringa
- * libera, così i bridge possono aggiungere i propri, es. 'fortify.login.succeeded').
+ * The most common audit event types (convenience: the type in AuditEvent is a
+ * free-form string, so bridges can add their own, e.g. 'fortify.login.succeeded').
  */
 enum AuthEventType: string
 {

@@ -7,8 +7,8 @@ namespace Padosoft\Rebel\Core\Contracts;
 use Padosoft\Rebel\Core\Audit\AuditEvent;
 
 /**
- * Registra gli eventi di audit. L'implementazione di default scrive su DB
- * (rebel_auth_events); altre implementazioni possono spedire a un SIEM, ecc.
+ * Records audit events. The default implementation writes to the DB
+ * (rebel_auth_events); other implementations can ship to a SIEM, etc.
  */
 interface AuditLogger
 {

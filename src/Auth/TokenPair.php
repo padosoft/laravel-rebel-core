@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Auth;
 
 /**
- * Coppia di token per i client headless/mobile (Laravel Sanctum + estensione interna):
- * un access token ("session") a vita breve + un refresh token a vita più lunga.
+ * Token pair for headless/mobile clients (Laravel Sanctum + internal extension):
+ * a short-lived ("session") access token + a longer-lived refresh token.
  *
- *  - accessToken:  bearer da usare nelle chiamate API;
- *  - refreshToken: per ottenere un nuovo access token (con rotation lato sessions);
- *  - expiresIn:    secondi di validità dell'access token;
- *  - tokenType:    schema, di norma "Bearer".
+ *  - accessToken:  bearer to use in API calls;
+ *  - refreshToken: to obtain a new access token (with rotation on the sessions side);
+ *  - expiresIn:    access token validity in seconds;
+ *  - tokenType:    scheme, usually "Bearer".
  */
 final readonly class TokenPair
 {

@@ -9,10 +9,10 @@ use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 
 /**
- * Orologio finto per i test: tempo fisso e avanzabile a piacere.
+ * Fake clock for tests: a fixed time that can be advanced at will.
  *
  *   $clock = new FakeClock(new DateTimeImmutable('2026-01-01 10:00:00'));
- *   $clock->advance(60);            // +60 secondi
+ *   $clock->advance(60);            // +60 seconds
  *   $clock->now();                  // 2026-01-01 10:01:00
  */
 final class FakeClock implements ClockInterface

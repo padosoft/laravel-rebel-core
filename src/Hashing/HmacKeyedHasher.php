@@ -8,21 +8,21 @@ use InvalidArgumentException;
 use Padosoft\Rebel\Core\Contracts\KeyedHasher;
 
 /**
- * Implementazione HMAC del KeyedHasher con registro di pepper versionati.
+ * HMAC implementation of the KeyedHasher with a registry of versioned peppers.
  *
- * Esempio:
- *   $hasher = new HmacKeyedHasher(peppers: [1 => 'segreto-v1'], currentVersion: 1);
+ * Example:
+ *   $hasher = new HmacKeyedHasher(peppers: [1 => 'secret-v1'], currentVersion: 1);
  *   $h = $hasher->hash('mario.rossi@example.it');   // HashedValue(hash, keyVersion: 1)
  *   $hasher->matches('mario.rossi@example.it', $h->hash, $h->keyVersion); // true
  *
- * Rotazione: aggiungi una nuova versione e imposta currentVersion al nuovo numero.
- * I nuovi hash usano la nuova versione; i vecchi restano verificabili finché la
- * loro versione resta nel registro.
+ * Rotation: add a new version and set currentVersion to the new number. New hashes
+ * use the new version; old ones remain verifiable as long as their version stays
+ * in the registry.
  */
 final class HmacKeyedHasher implements KeyedHasher
 {
     /**
-     * @param  array<int, string>  $peppers  mappa versione => pepper segreto
+     * @param  array<int, string>  $peppers  map of version => secret pepper
      */
     public function __construct(
         private readonly array $peppers,
@@ -48,9 +48,9 @@ final class HmacKeyedHasher implements KeyedHasher
     {
         $pepper = $this->peppers[$keyVersion] ?? null;
 
-        // Nota timing: il return anticipato qui NON è un oracle. La keyVersion non è
-        // segreta — viene salvata in chiaro accanto all'hash — quindi distinguere
-        // "versione assente" da "hash diverso" non rivela nulla all'attaccante.
+        // Timing note: the early return here is NOT an oracle. The keyVersion is not
+        // secret — it is stored in cleartext next to the hash — so distinguishing
+        // "missing version" from "different hash" reveals nothing to an attacker.
         if ($pepper === null || $pepper === '') {
             return false;
         }

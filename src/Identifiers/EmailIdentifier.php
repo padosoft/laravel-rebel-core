@@ -8,14 +8,14 @@ use InvalidArgumentException;
 use Stringable;
 
 /**
- * Identificatore email.
+ * Email identifier.
  *
  *   EmailIdentifier::from(' Mario.Rossi@Example.IT ')->normalized(); // mario.rossi@example.it
  *
  *   EmailIdentifier::from('mario.rossi@example.it')->masked();       // m***@example.it
  *
- * La normalizzazione (trim + lowercase) rende stabile l'HMAC e il lookup.
- * Il masking nasconde la parte locale (mostra solo la prima lettera) per UI/log.
+ * Normalization (trim + lowercase) makes the HMAC and the lookup stable.
+ * Masking hides the local part (shows only the first letter) for UI/logs.
  */
 final readonly class EmailIdentifier implements AuthIdentifier, Stringable
 {
@@ -50,8 +50,8 @@ final readonly class EmailIdentifier implements AuthIdentifier, Stringable
     {
         [$local, $domain] = explode('@', $this->value, 2);
 
-        // Con local part di 1 carattere, mostrare la prima lettera rivelerebbe TUTTA
-        // la parte locale: in quel caso mascheriamo completamente.
+        // With a 1-character local part, showing the first letter would reveal the
+        // ENTIRE local part: in that case we mask it completely.
         $maskedLocal = mb_strlen($local) <= 1 ? '***' : mb_substr($local, 0, 1).'***';
 
         return $maskedLocal.'@'.$domain;

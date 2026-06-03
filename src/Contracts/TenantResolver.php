@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Padosoft\Rebel\Core\Context\TenantContext;
 
 /**
- * Determina il tenant corrente dalla richiesta (es. dominio/sito/brand).
- * Ritorna null in contesti single-tenant o CLI/job senza tenant.
+ * Determines the current tenant from the request (e.g. domain/site/brand).
+ * Returns null in single-tenant contexts or in CLI/jobs without a tenant.
  */
 interface TenantResolver
 {

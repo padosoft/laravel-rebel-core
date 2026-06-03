@@ -22,11 +22,11 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 /**
- * Service provider del package core di Laravel Rebel.
+ * Service provider for the Laravel Rebel core package.
  *
- * Il core è volutamente piccolo e stabile: espone value object, contratti e il
- * "linguaggio condiviso" della suite. Non registra route, non dipende da
- * Fortify/Twilio/AI. Vedi docs/adr/ADR-0005-design-lock.md.
+ * The core is deliberately small and stable: it exposes value objects, contracts
+ * and the suite's "shared language". It registers no routes and does not depend on
+ * Fortify/Twilio/AI. See docs/adr/ADR-0005-design-lock.md.
  */
 final class RebelCoreServiceProvider extends PackageServiceProvider
 {
@@ -41,15 +41,15 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
-        // Orologio PSR-20: in produzione SystemClock; i test possono rebindare un FakeClock.
+        // PSR-20 clock: SystemClock in production; tests can rebind a FakeClock.
         $this->app->singleton(ClockInterface::class, SystemClock::class);
 
         $this->app->singleton(KeyedHasher::class, function (Application $app): HmacKeyedHasher {
-            // make(Repository::class) è tipizzato da Larastan come Repository (niente @var).
+            // make(Repository::class) is typed by Larastan as Repository (no @var needed).
             $config = $app->make(Repository::class);
 
-            // Normalizziamo la config in modo type-safe (niente cast su mixed):
-            // teniamo solo coppie [int => string], scartando voci malformate.
+            // Normalize the config in a type-safe way (no cast on mixed):
+            // keep only [int => string] pairs, discarding malformed entries.
             $peppers = [];
             $rawPeppers = $config->get('rebel-core.peppers', []);
 
@@ -78,15 +78,15 @@ final class RebelCoreServiceProvider extends PackageServiceProvider
             );
         });
 
-        // Tenant corrente (lo imposta il TenantResolver dell'app) + validatori di config.
+        // Current tenant (set by the app's TenantResolver) + config validators.
         $this->app->singleton(CurrentTenant::class);
         $this->app->tag([CoreConfigValidator::class], 'rebel.config_validators');
     }
 
     public function packageBooted(): void
     {
-        // Evita il cross-tenant leakage tra job nello stesso worker long-running:
-        // azzera il tenant corrente PRIMA di processare ogni job.
+        // Prevents cross-tenant leakage between jobs in the same long-running worker:
+        // reset the current tenant BEFORE processing each job.
         $this->app->make(Dispatcher::class)->listen(JobProcessing::class, function (): void {
             $this->app->make(CurrentTenant::class)->reset();
         });

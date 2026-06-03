@@ -7,22 +7,21 @@ namespace Padosoft\Rebel\Core\Contracts;
 use Padosoft\Rebel\Core\Hashing\HashedValue;
 
 /**
- * Hashing "keyed" (HMAC con pepper segreto lato server) con rotazione delle chiavi.
+ * "Keyed" hashing (HMAC with a server-side secret pepper) with key rotation.
  *
- * Perché non un semplice hash? Un hash "nudo" di un valore a bassa entropia
- * (IP, OTP a 6 cifre, email) è facilmente reversibile/brute-forzabile. Con
- * l'HMAC + pepper segreto, senza il pepper non si può ricostruire né forgiare
- * il valore. La `keyVersion` permette di ruotare il pepper senza rompere gli
- * hash già salvati.
+ * Why not a plain hash? A "bare" hash of a low-entropy value (IP, 6-digit OTP,
+ * email) is easily reversible/brute-forceable. With HMAC + a secret pepper, the
+ * value cannot be reconstructed or forged without the pepper. The `keyVersion`
+ * allows rotating the pepper without breaking already-stored hashes.
  */
 interface KeyedHasher
 {
-    /** Calcola l'HMAC del valore con la versione di pepper ATTIVA. */
+    /** Computes the HMAC of the value with the ACTIVE pepper version. */
     public function hash(string $value): HashedValue;
 
     /**
-     * Confronto a tempo costante tra $value e un $hash prodotto con $keyVersion.
-     * Ritorna false (senza eccezioni) se quella versione non è configurata.
+     * Constant-time comparison between $value and a $hash produced with $keyVersion.
+     * Returns false (without exceptions) if that version is not configured.
      */
     public function matches(string $value, string $hash, int $keyVersion): bool;
 }

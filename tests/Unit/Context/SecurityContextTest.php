@@ -24,14 +24,14 @@ it('builds from a request hashing ip and user-agent (never raw)', function (): v
 });
 
 it('does not hash an empty user-agent', function (): void {
-    // Symfony Request::create imposta di default HTTP_USER_AGENT='Symfony', quindi
-    // per testare il ramo "assente" passiamo esplicitamente una UA vuota.
+    // Symfony Request::create sets HTTP_USER_AGENT='Symfony' by default, so to test
+    // the "absent" branch we explicitly pass an empty UA.
     $request = Request::create('/login', 'GET', server: ['HTTP_USER_AGENT' => '']);
 
     $ctx = SecurityContext::fromRequest($request, new HmacKeyedHasher([1 => 'p'], 1));
 
     expect($ctx->userAgentHash)->toBeNull()
-        ->and($ctx->ipHmac)->not->toBeNull(); // Request::create imposta REMOTE_ADDR 127.0.0.1
+        ->and($ctx->ipHmac)->not->toBeNull(); // Request::create sets REMOTE_ADDR 127.0.0.1
 });
 
 it('is immutable: with* returns a new instance, original untouched', function (): void {

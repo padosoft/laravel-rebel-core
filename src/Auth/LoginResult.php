@@ -7,13 +7,13 @@ namespace Padosoft\Rebel\Core\Auth;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Esito di un login andato a buon fine. Due "forme":
+ * Outcome of a successful login. Two "shapes":
  *
- *  - WEB:    sessione + cookie (lo stato è nella sessione Laravel) → tokenPair() è null;
- *  - MOBILE: nessuna sessione, si emette una TokenPair (Sanctum access+refresh).
+ *  - WEB:    session + cookie (state lives in the Laravel session) → tokenPair() is null;
+ *  - MOBILE: no session, a TokenPair is issued (Sanctum access+refresh).
  *
- * L'azione di verify (es. email-OTP) decide la forma in base al guard/canale e
- * ritorna questo oggetto; il chiamante fa il branch con isWeb()/isMobile().
+ * The verify action (e.g. email-OTP) decides the shape based on the guard/channel
+ * and returns this object; the caller branches with isWeb()/isMobile().
  *
  *   $result = RebelEmailOtp::verify(...);
  *   if ($result->isMobile()) { return response()->json($result->tokenPair()); }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Risk;
 
 /**
- * Azione consigliata dal risk engine. È un SUGGERIMENTO: la decisione finale
- * spetta alle policy deterministiche (e mai all'AI, vedi ai-guard).
+ * Action recommended by the risk engine. It is a SUGGESTION: the final decision
+ * belongs to the deterministic policies (and never to the AI, see ai-guard).
  */
 enum RecommendedAction: string
 {

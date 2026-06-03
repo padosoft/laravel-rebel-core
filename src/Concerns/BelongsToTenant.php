@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Padosoft\Rebel\Core\Tenancy\CurrentTenant;
 
 /**
- * Isola i record per tenant. I modelli Rebel che usano questo trait:
- *  - in lettura vengono filtrati per il tenant corrente (global scope);
- *  - in creazione ricevono automaticamente il tenant_id corrente, se non già impostato.
+ * Isolates records per tenant. Rebel models using this trait:
+ *  - on read are filtered by the current tenant (global scope);
+ *  - on create automatically receive the current tenant_id, if not already set.
  *
- * Se non c'è un tenant corrente (single-tenant/CLI), nessun filtro viene applicato.
+ * If there is no current tenant (single-tenant/CLI), no filter is applied.
  *
  * @mixin Model
  */

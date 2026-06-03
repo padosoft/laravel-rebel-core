@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Stringable;
 
 /**
- * Identificatore generico (es. username) quando non è né email né telefono.
+ * Generic identifier (e.g. username) when it is neither an email nor a phone.
  *
  *   GenericIdentifier::from('  Mario_Rossi ')->normalized(); // mario_rossi
  *   GenericIdentifier::from('mario_rossi')->masked();        // m***

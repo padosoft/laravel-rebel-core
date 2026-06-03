@@ -29,8 +29,8 @@ it('does not over-redact diagnostic keys containing "code"', function (): void {
         'postal_code' => '20100',
         'error_code' => 'E42',
         'status_code' => 200,
-        'code' => '123456',          // chiave esatta "code" -> oscurata
-        'verification_code' => '999', // esatta -> oscurata
+        'code' => '123456',          // exact key "code" -> redacted
+        'verification_code' => '999', // exact -> redacted
     ]);
 
     expect($clean['country_code'])->toBe('IT')

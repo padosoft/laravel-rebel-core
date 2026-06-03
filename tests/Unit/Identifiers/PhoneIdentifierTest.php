@@ -10,7 +10,7 @@ it('normalizes phone removing separators and keeping the leading +', function ()
 });
 
 it('masks all but the last two digits', function (): void {
-    // 12 cifre dopo il '+': 10 mascherate + ultime 2 in chiaro
+    // 12 digits after the '+': 10 masked + last 2 in cleartext
     expect(PhoneIdentifier::from('+391112223334')->masked())
         ->toBe('+'.str_repeat('*', 10).'34');
 });

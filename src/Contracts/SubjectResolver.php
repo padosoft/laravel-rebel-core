@@ -9,9 +9,9 @@ use Padosoft\Rebel\Core\Context\SecurityContext;
 use Padosoft\Rebel\Core\Identifiers\AuthIdentifier;
 
 /**
- * Risolve un identificatore (es. email) nell'utente applicativo, dato il contesto
- * (tenant/guard). Ritorna null se non esiste (la "user resolution ritardata" del
- * flusso OTP passa di qui). L'app/Gescat fornisce la propria implementazione.
+ * Resolves an identifier (e.g. email) to the application user, given the context
+ * (tenant/guard). Returns null if it does not exist (the OTP flow's "deferred user
+ * resolution" goes through here). The app provides its own implementation.
  */
 interface SubjectResolver
 {

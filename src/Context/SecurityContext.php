@@ -10,20 +10,21 @@ use Padosoft\Rebel\Core\Contracts\KeyedHasher;
 use Padosoft\Rebel\Core\Identifiers\AuthIdentifier;
 
 /**
- * Contesto di sicurezza condiviso da OTP, step-up, audit e risk engine.
+ * Security context shared by OTP, step-up, audit and the risk engine.
  *
- * È un value object immutabile: i metodi with*() ritornano una NUOVA istanza.
- * IP e User-Agent sono salvati come HMAC (mai in chiaro) per privacy/GDPR; l'hashing
- * è delegato al KeyedHasher (passato a fromRequest), così il VO resta puro e testabile.
+ * It is an immutable value object: the with*() methods return a NEW instance.
+ * IP and User-Agent are stored as HMAC (never cleartext) for privacy/GDPR; hashing
+ * is delegated to the KeyedHasher (passed to fromRequest), so the VO stays pure and
+ * testable.
  *
- * Nota su rotazione: ip/ua usano la versione di pepper CORRENTE al momento della
- * creazione. Quando si registra un AuditEvent, la sua singola `key_version` (quella
- * dell'identifier, anch'esso hashato con la versione corrente) vale anche per ip/ua.
- * La correlazione su ip_hmac/user_agent_hash è quindi valida ENTRO un'epoca di pepper;
- * dopo una rotazione, gli hash vecchi non sono confrontabili con quelli nuovi (sono
- * usati per correlazione/raggruppamento, non per autenticazione: limite accettato).
+ * Note on rotation: ip/ua use the CURRENT pepper version at creation time. When an
+ * AuditEvent is recorded, its single `key_version` (that of the identifier, also
+ * hashed with the current version) applies to ip/ua as well. Correlation on
+ * ip_hmac/user_agent_hash is therefore valid WITHIN a pepper epoch; after a
+ * rotation, old hashes are not comparable with new ones (they are used for
+ * correlation/grouping, not for authentication: an accepted limitation).
  *
- * Esempio:
+ * Example:
  *   $ctx = SecurityContext::fromRequest($request, $hasher)
  *       ->withGuard('customers')
  *       ->withPurpose('customer-login')

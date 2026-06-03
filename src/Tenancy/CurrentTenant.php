@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Tenancy;
 
 /**
- * Holder del tenant corrente (singleton). Lo imposta il TenantResolver/middleware
- * dell'app; lo legge il global scope BelongsToTenant per isolare i dati per tenant.
- * Null = nessun tenant (single-tenant, CLI, job).
+ * Holder of the current tenant (singleton). Set by the app's TenantResolver/
+ * middleware; read by the BelongsToTenant global scope to isolate data per tenant.
+ * Null = no tenant (single-tenant, CLI, job).
  */
 final class CurrentTenant
 {
@@ -24,9 +24,9 @@ final class CurrentTenant
     }
 
     /**
-     * Azzera il tenant corrente. FONDAMENTALE nei worker di coda long-running:
-     * il provider lo invoca all'inizio di ogni job per evitare che un job erediti
-     * il tenant di quello precedente (cross-tenant leakage).
+     * Resets the current tenant. ESSENTIAL in long-running queue workers: the
+     * provider invokes it at the start of every job to prevent a job from inheriting
+     * the previous one's tenant (cross-tenant leakage).
      */
     public function reset(): void
     {

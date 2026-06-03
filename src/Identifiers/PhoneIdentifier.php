@@ -8,15 +8,15 @@ use InvalidArgumentException;
 use Stringable;
 
 /**
- * Identificatore telefonico.
+ * Phone identifier.
  *
  *   PhoneIdentifier::from('+39 328 214 6956')->normalized(); // +393282146956
  *   PhoneIdentifier::from('+393282146956')->masked();        // +**********56
  *
- * Normalizzazione "leggera": rimuove separatori, mantiene un eventuale '+' iniziale.
- * NON esegue validazione E.164 completa (servirebbe libphonenumber): un bridge
- * dedicato può aggiungere validazione/format per-paese. Qui garantiamo solo che
- * ci siano abbastanza cifre per essere plausibile.
+ * "Light" normalization: strips separators, keeps a possible leading '+'. It does
+ * NOT perform full E.164 validation (that would need libphonenumber): a dedicated
+ * bridge can add per-country validation/formatting. Here we only guarantee there
+ * are enough digits to be plausible.
  */
 final readonly class PhoneIdentifier implements AuthIdentifier, Stringable
 {

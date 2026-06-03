@@ -7,11 +7,11 @@ namespace Padosoft\Rebel\Core\Contracts;
 use Padosoft\Rebel\Core\Context\SecurityContext;
 
 /**
- * Gate anti-bot/CAPTCHA (Turnstile/hCaptcha/Arkose) da invocare PRIMA di inviare
- * un OTP/SMS su richieste a rischio (nuovo device, geo non domestica, alta velocità).
+ * Anti-bot/CAPTCHA gate (Turnstile/hCaptcha/Arkose) to invoke BEFORE sending an
+ * OTP/SMS on risky requests (new device, non-domestic geo, high velocity).
  */
 interface BotProtection
 {
-    /** True se la richiesta supera il controllo (token CAPTCHA valido / non bot). */
+    /** True if the request passes the check (valid CAPTCHA token / not a bot). */
     public function passes(SecurityContext $context, ?string $token): bool;
 }

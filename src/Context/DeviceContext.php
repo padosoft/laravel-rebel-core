@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Context;
 
 /**
- * Informazioni sul dispositivo da cui arriva la richiesta.
+ * Information about the device the request comes from.
  *
- * `deviceId` identifica un device "ricordato"/fidato (vedi modulo sessions);
- * `fingerprintHash` è l'impronta del browser/dispositivo (già hashata, mai raw).
+ * `deviceId` identifies a "remembered"/trusted device (see the sessions module);
+ * `fingerprintHash` is the browser/device fingerprint (already hashed, never raw).
  */
 final readonly class DeviceContext
 {

@@ -9,7 +9,7 @@ use Padosoft\Rebel\Core\Concerns\BelongsToTenant;
 use Padosoft\Rebel\Core\Tenancy\CurrentTenant;
 
 /**
- * Modello di prova solo per testare il trait.
+ * Throwaway model just to test the trait.
  *
  * @property string|null $tenant_id
  * @property string $name
@@ -42,16 +42,16 @@ it('scopes reads and stamps tenant_id on create from CurrentTenant', function ()
     $current->set('tenant-B');
     TenantTestModel::create(['name' => 'b']);
 
-    // Come tenant-B vedo solo i miei record.
+    // As tenant-B I only see my own records.
     expect(TenantTestModel::count())->toBe(1)
         ->and(TenantTestModel::first()?->getAttribute('tenant_id'))->toBe('tenant-B');
 
-    // Come tenant-A vedo solo i miei.
+    // As tenant-A I only see mine.
     $current->set('tenant-A');
     expect(TenantTestModel::count())->toBe(1)
         ->and(TenantTestModel::first()?->getAttribute('name'))->toBe('a');
 
-    // Senza tenant corrente: nessun filtro, vedo tutto.
+    // Without a current tenant: no filter, I see everything.
     $current->set(null);
     expect(TenantTestModel::count())->toBe(2);
 });

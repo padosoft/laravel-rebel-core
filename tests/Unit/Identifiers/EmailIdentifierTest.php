@@ -19,7 +19,7 @@ it('exposes the email type', function (): void {
 });
 
 it('fully masks a single-character local part (no PII leak)', function (): void {
-    // 'a@example.it' NON deve diventare 'a***@...': rivelerebbe tutta la parte locale.
+    // 'a@example.it' must NOT become 'a***@...': it would reveal the entire local part.
     expect(EmailIdentifier::from('a@example.it')->masked())->toBe('***@example.it');
 });
 

@@ -9,11 +9,11 @@ use Padosoft\Rebel\Core\Assurance\Aal;
 use Padosoft\Rebel\Core\Concerns\BelongsToTenant;
 
 /**
- * Modello Eloquent della tabella `rebel_auth_events`.
+ * Eloquent model for the `rebel_auth_events` table.
  *
- * Lo scrive il DatabaseAuditLogger (via query builder, per leggerezza); questo
- * modello serve a LEGGERE/filtrare gli eventi (es. admin-api) con i cast giusti e
- * l'isolamento per tenant (BelongsToTenant). Id ULID (stringa, non auto-increment).
+ * The DatabaseAuditLogger writes it (via the query builder, for lightness); this
+ * model is for READING/filtering the events (e.g. admin-api) with the right casts
+ * and per-tenant isolation (BelongsToTenant). ULID id (string, not auto-increment).
  */
 final class RebelAuthEvent extends Model
 {
@@ -27,8 +27,8 @@ final class RebelAuthEvent extends Model
 
     public $timestamps = false;
 
-    // Sola lettura via Eloquent: le scritture passano dal DatabaseAuditLogger
-    // (query builder). Nessun campo mass-assignable per sicurezza.
+    // Read-only via Eloquent: writes go through the DatabaseAuditLogger
+    // (query builder). No mass-assignable fields, for safety.
     protected $fillable = [];
 
     /**

@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Padosoft\Rebel\Core\Identifiers;
 
 /**
- * Un identificatore con cui un utente si autentica (email, telefono, username...).
+ * An identifier a user authenticates with (email, phone, username...).
  *
- * Tre responsabilità:
- *  - type():       il tipo ('email' | 'phone' | 'generic'), utile per routing/policy;
- *  - normalized(): la forma canonica usata per lookup e per l'HMAC (es. email lowercase);
- *  - masked():     una forma offuscata, sicura da mostrare in UI o nei log (no PII piena).
+ * Three responsibilities:
+ *  - type():       the type ('email' | 'phone' | 'generic'), useful for routing/policy;
+ *  - normalized(): the canonical form used for lookup and the HMAC (e.g. lowercase email);
+ *  - masked():     an obfuscated form, safe to show in UI or logs (no full PII).
  *
- * Nota: gli identificatori NON calcolano da soli l'HMAC: per quello c'è il
- * KeyedHasher (che hasha normalized()). Così i value object restano "puri" e testabili.
+ * Note: identifiers do NOT compute the HMAC themselves: that is the KeyedHasher's
+ * job (it hashes normalized()). This keeps the value objects "pure" and testable.
  */
 interface AuthIdentifier
 {

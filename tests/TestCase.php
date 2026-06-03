@@ -26,7 +26,7 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        // SQLite in-memory per i test che toccano il DB (audit).
+        // In-memory SQLite for the tests that touch the DB (audit).
         $app['config']->set('database.default', 'testing');
     }
 
