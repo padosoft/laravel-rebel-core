@@ -7,7 +7,7 @@ title: Laravel Rebel Documentation
 Centralized documentation for the 22-package `padosoft/laravel-rebel-*` ecosystem.
 
 ::: callout info
-This site is intentionally centralized in `laravel-rebel-core/doc-site`. Every package README points here: `https://doc.laravel-rebel.padosoft.com`.
+This site is intentionally centralized in `laravel-rebel-core/docs-site`. Every package README points here: `https://doc.laravel-rebel.padosoft.com`.
 :::
 
 ::: grids
@@ -215,3 +215,4 @@ flowchart LR
   StepUp --> Bridges[Fortify / Passkeys / TOTP / OTPZ]
   AdminApi --> AiGuard[AI Guard]
 ```
+

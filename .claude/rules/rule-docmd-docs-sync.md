@@ -2,12 +2,12 @@
 
 This rule is mandatory.
 
-When a user-facing feature, config key, command, route, migration, public contract, README section or package behavior changes in any `laravel-rebel-*` repository, update `laravel-rebel-core/doc-site/docs/**` in the same work. If the change adds a page, register it in `doc-site/docmd.config.json` navigation.
+When a user-facing feature, config key, command, route, migration, public contract, README section or package behavior changes in any `laravel-rebel-*` repository, update `laravel-rebel-core/docs-site/docs/**` in the same work. If the change adds a page, register it in `docs-site/docmd.config.json` navigation.
 
 Before closing the work, run:
 
 ```bash
-cd doc-site
+cd docs-site
 npm run check
 npm run build
 ```
@@ -17,6 +17,7 @@ A docs update is not required for purely internal refactors, dependency-only too
 Anti-patterns:
 
 - Shipping a package feature without updating the central docs.
-- Adding Markdown under `doc-site/docs/**` without navigation.
+- Adding Markdown under `docs-site/docs/**` without navigation.
 - Reintroducing MDX/JSX syntax in Markdown.
-- Creating separate package-local doc sites for Rebel packages instead of the centralized `laravel-rebel-core/doc-site`.
+- Creating separate package-local doc sites for Rebel packages instead of the centralized `laravel-rebel-core/docs-site`.
+
