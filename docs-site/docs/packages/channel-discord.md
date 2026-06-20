@@ -1,33 +1,73 @@
+---
+title: laravel-rebel-channel-discord
+description: Ship Rebel security and SOC alerts — anomaly cases, lockouts, high-risk events — to a Discord channel via webhook, with every send recorded in the audit trail.
+---
+
 # laravel-rebel-channel-discord
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-channel-discord) · Composer package: `padosoft/laravel-rebel-channel-discord`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-channel-discord) · Composer: `padosoft/laravel-rebel-channel-discord` · MIT
 
-## Motivazione
+> **Your SOC feed, in Discord.** A delivery channel that pushes security and SOC alerts — anomaly
+> cases, lockouts, high-risk events — to a Discord channel via webhook, so the team sees incidents
+> the moment they happen, with each send logged in the Rebel audit trail.
 
-Discord delivery channel for Laravel Rebel Channels: ship security/SOC alerts (anomaly cases, lockouts, high-risk events) and notifications to a Discord channel via webhook. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A **delivery channel** under the Rebel Channels umbrella, focused on operational and security
+notifications. When the suite flags an anomaly case, locks an account, or detects a high-risk event,
+this package ships that alert to a Discord channel through an incoming webhook. It owns one bounded
+job: the Discord transport. The decision to alert — and the assurance and audit semantics behind it
+— live in `laravel-rebel-core`.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Security signals are worthless if nobody sees them in time. Most teams already run a Discord server,
+and a `#security` channel is the natural place for lockouts and anomaly alerts to land — but stitching
+a webhook to your auth events by hand means hand-rolling payloads, retries, and a separate log of
+what was actually delivered. This package turns Rebel's security-significant events into Discord
+alerts out of the box, and records every delivery back into the same audit trail the rest of the
+suite uses — so "did the team get paged?" is an auditable fact, not a guess.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+- A `DiscordDeliveryChannel` that ships security/SOC alerts (anomaly cases, lockouts, high-risk events) to a Discord channel.
+- A `DiscordGateway` contract with a webhook-based HTTP implementation (`HttpDiscordGateway`).
+- A `FakeDiscordGateway` so your tests assert payloads without hitting Discord.
+- Delivery telemetry that feeds the core audit trail — sends and outcomes land in `rebel_auth_events`, never secrets.
+- One config file (`config/rebel-channel-discord.php`) and zero routes or migrations to reason about.
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-channel-discord]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- Your team runs Discord and wants security/SOC alerts in a channel they already watch.
+- You want **anomaly cases, lockouts, and high-risk events** pushed in real time, not buried in a dashboard.
+- You need webhook delivery wired into the Rebel audit trail without building the plumbing yourself.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-channel-discord
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+Configure the Discord webhook URL in `config/rebel-channel-discord.php` (publish it first), then let
+the Rebel Channels layer route security alerts through this channel. In tests, bind
+`FakeDiscordGateway` to assert exactly what would be posted to Discord without sending a real
+request.
+
+## How it fits
+
+This package is a leaf: it depends on `padosoft/laravel-rebel-channels` for the channel contract and
+on `padosoft/laravel-rebel-core` for the audit and assurance vocabulary. It adds no routes, models,
+or migrations — it's pure transport. Add it for SOC alerting, remove it when you switch tools, and
+the rest of the suite never notices, while every alert it sends stays visible in the shared audit
+trail.
+
+One audit trail spanning every channel — Discord, Telegram, SMS, email — is what bolt-on webhook
+notifiers can't offer. See [Why Rebel](/ecosystem/why-rebel).
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -77,7 +117,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -88,7 +128,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -98,7 +138,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### Architecture decisions
 
 ::: collapsible "Problem: keep laravel-rebel-channel-discord replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -112,15 +152,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-channel-discord
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\DiscordDeliveryChannelTest.php`
 - `tests\Feature\HttpDiscordGatewayTest.php`

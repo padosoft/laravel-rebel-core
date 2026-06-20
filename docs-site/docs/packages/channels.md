@@ -1,33 +1,97 @@
+---
+title: laravel-rebel-channels
+description: The provider-agnostic backbone for SMS, WhatsApp and voice verification — routing with automatic provider fallback, cooldown, multi-dimensional rate limiting and anti toll-fraud/IRSF defenses.
+---
+
 # laravel-rebel-channels
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-channels) · Composer package: `padosoft/laravel-rebel-channels`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-channels) · Composer: `padosoft/laravel-rebel-channels` · MIT
 
-## Motivazione
+> **One verification API, every provider behind it.** `-channels` is the abstraction that routes
+> phone verification and message delivery across SMS, WhatsApp and voice — with provider fallback,
+> cooldown, multi-dimensional rate limiting and anti toll-fraud defenses baked in. Swap or add a
+> provider and your call sites never change.
 
-Channel/provider abstraction (SMS/WhatsApp/voice) for Laravel Rebel: verification routing with fallback, cooldown, multi-dimensional rate limiting, and anti toll-fraud/IRSF defences. Part of padosoft/laravel-rebel-*.
+::: callout info
+This package defines the *contract and the routing*. The actual sending happens in a provider
+package (`-channel-twilio`, `-channel-vonage`, `-channel-bird`) that plugs in behind it. Install at
+least one provider to deliver anything.
+:::
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+---
 
-## Teoria
+## What it is
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+`-channels` is the seam between "I need to verify this phone number" and "which vendor actually sent
+the SMS." It owns the decisions that should *never* be re-implemented per provider:
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+- a **`VerificationRouter`** that picks a provider, applies cooldown and rate limits, and falls back
+  to the next provider when one fails,
+- a **`FraudGuard`** that defends against toll-fraud / IRSF abuse before a single message is billed,
+- a **registry** of pluggable providers and delivery channels (`ProviderRegistry`,
+  `DeliveryChannelRegistry`),
+- typed **results** (`VerificationResult`, `DeliveryResult`) and **enums** (`Channel`,
+  `VerificationStatus`, `DeliveryStatus`) so every provider speaks the same language.
 
-## Design + diagramma
+## The problem it solves
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-channels]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+A single-provider SMS SDK ties your whole auth flow to one vendor's uptime, pricing and country
+coverage — and gives you nothing against international revenue-share fraud, where an attacker pumps
+OTPs to premium-rate ranges and you pay the bill. Switching providers later means rewriting call
+sites. `-channels` inverts that: routing, fallback, cooldown, rate limiting and fraud defense live
+*once*, above the provider, and vendors become interchangeable plug-ins.
+
+---
+
+## What you get
+
+| Area | What you get |
+|---|---|
+| **Routing & fallback** | `VerificationRouter` — selects a provider, retries with the **next** provider on failure, enforces cooldown. |
+| **Rate limiting** | `CacheRateLimiter` — multi-dimensional limits to throttle abuse without blocking legitimate users. |
+| **Fraud defense** | `FraudGuard` + `FraudDecision` — anti toll-fraud / IRSF gating before any message is billed. |
+| **Provider registry** | `ProviderRegistry`, `DeliveryChannelRegistry` — register and resolve pluggable providers/channels. |
+| **Contracts** | `VerificationProvider`, `MessageDeliveryChannel` — the two interfaces every provider implements. |
+| **Typed results** | `VerificationResult`, `DeliveryResult` — never confuse a *delivery* outcome with *authentication* success. |
+| **Enums** | `Channel` (SMS \| WhatsApp \| voice), `VerificationStatus`, `DeliveryStatus`. |
+| **Test doubles** | `FakeVerificationProvider`, `FakeMessageDeliveryChannel` — verify your flows without sending a real OTP. |
+
+## When to use it
+
+- You send **phone/WhatsApp/voice OTPs** and want vendor independence with automatic fallback.
+- You need **toll-fraud / IRSF protection** and rate limiting in front of every provider, not bolted
+  on per vendor.
+- You're **writing a provider package** and need the `VerificationProvider` / `MessageDeliveryChannel`
+  contracts to plug into.
+
+---
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-channels
+# plus at least one provider, e.g.:
+composer require padosoft/laravel-rebel-channel-twilio
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+A delivery result is **not** an authentication result. `-channels` keeps the two separate: a sent SMS
+means the message went out; assurance is decided only when the user returns a valid code. Telemetry
+for every send, delivery receipt, cost and country flows into the Rebel audit trail via the core
+`AuditLogger` — never logging the OTP itself.
+
+## How it fits
+
+`-channels` sits on top of `laravel-rebel-core` (it speaks the core's contracts and feeds the audit
+trail) and underneath the provider packages that implement actual delivery. The host app talks to the
+router; the router talks to whichever provider is configured — and to the next one if that fails.
+
+One single-provider SMS SDK can't give you cross-vendor fallback, shared rate limiting and IRSF
+defense in one place — see **[Why Rebel → "Rebel channels vs. a single-provider SMS SDK"](/ecosystem/why-rebel)**.
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -129,14 +193,6 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
-
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-channels
-php artisan vendor:publish
-php artisan migrate
-```
 
 ## Test and verification surface
 

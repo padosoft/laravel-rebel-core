@@ -1,218 +1,272 @@
 ---
-title: Laravel Rebel Documentation
+title: Laravel Rebel — Enterprise Authentication Control Plane for Laravel
+description: Laravel Rebel turns Laravel Fortify into an enterprise authentication control plane — passwordless OTP, passkey-first, risk-based step-up, PSD2/SCA, multi-tenant, audit, web admin and AI guard. 22 small, composable packages.
 ---
 
 # Laravel Rebel
 
-Centralized documentation for the 22-package `padosoft/laravel-rebel-*` ecosystem.
+![Laravel Rebel — enterprise authentication control plane for Laravel](/assets/laravel-rebel-banner.png)
+
+![Laravel 12 | 13](https://img.shields.io/badge/Laravel-12%20%7C%2013-FF2D20?style=flat-square&logo=laravel&logoColor=white)
+![PHP 8.3 | 8.4 | 8.5](https://img.shields.io/badge/PHP-8.3%20%7C%208.4%20%7C%208.5-777BB4?style=flat-square&logo=php&logoColor=white)
+![PHPStan max](https://img.shields.io/badge/PHPStan-max-2A6FDB?style=flat-square)
+![Pest 4](https://img.shields.io/badge/tests-Pest%204-22C55E?style=flat-square)
+![License MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+
+> **Laravel Rebel turns Laravel Fortify into an enterprise authentication _control plane_.**
+> Passwordless OTP, passkey-first login, risk-based step-up, PSD2/SCA, multi-tenant, full audit,
+> a web admin panel and an AI security copilot — split into **22 small, composable packages** so you
+> install only what you need.
 
 ::: callout info
-This site is intentionally centralized in `laravel-rebel-core/docs-site`. Every package README points here: `https://doc.laravel-rebel.padosoft.com`.
+**New here? Read this page top to bottom.** In five minutes you'll know exactly what Rebel is, the
+problems it solves, why it's different, and where to click next. The whole ecosystem is documented on
+this one site — every package README points back here.
 :::
+
+---
+
+## What Laravel Rebel is — in one minute
+
+Laravel already ships **Fortify** (login, registration, password reset, TOTP 2FA, passkeys). Rebel
+**does not replace it** — it sits _on top_ and adds the things a real **enterprise / ecommerce /
+fintech** product needs but the framework leaves to you:
+
+- **Passwordless login** — Shopify-style email-OTP, and **passkey-first** (the most secure, phishing-resistant).
+- **Step-up** — re-prompt for a strong confirmation _only_ for sensitive actions (change email, credit order, download invoice…), at an assurance level that matches the risk.
+- **SCA / PSD2 dynamic linking** — payment/credit-order confirmations cryptographically bound to **amount + payee** (EU compliant).
+- **SMS / WhatsApp / voice channels** — with provider fallback and anti toll-fraud / IRSF defenses.
+- **Multi-tenant, audit, web admin panel, AI guard** — the operational layer SaaS teams actually run on.
+
+Everything is keyed on **NIST assurance levels** (AAL/AMR) and **GDPR-safe by design** (no PII in
+cleartext, ever).
+
+> **In one line:** *Rebel is the enterprise auth layer Laravel doesn't ship — assurance-aware, GDPR-safe, fully audited, and composable.*
+
+---
+
+## The problem it solves
+
+Every team that outgrows "email + password + maybe TOTP" hits the same wall. Here's the gap Rebel closes:
+
+| Without Rebel | With Rebel |
+|---|---|
+| You hand-roll OTP flows, rate limiting and anti-enumeration — and get the edge cases wrong. | Battle-tested passwordless flows with anti-enumeration and multi-dimensional rate limiting, out of the box. |
+| "2FA" is a single on/off flag. Nothing distinguishes an SMS code from a hardware passkey. | A **first-class assurance model** (NIST AAL/AMR) that *knows* email-OTP can't cover an action that needs a passkey. |
+| Sensitive actions (change payout IBAN, big order) are protected the same as login — or not at all. | **Per-action step-up** with risk-based escalation and **PSD2/SCA dynamic linking**. |
+| IPs, emails and user-agents sit in your logs and DB in cleartext — a GDPR liability. | Every identifier stored as a **keyed HMAC** with a versioned pepper and rotation. Never reversible. |
+| OTP codes and secrets leak into logs and audit trails. | An audit trail with **automatic secret redaction** — secrets are physically `[REDACTED]` before write. |
+| You bolt SMS onto one provider and pray it never goes down or gets toll-fraud'd. | A **channel abstraction** with provider fallback, cooldowns and anti toll-fraud/IRSF defenses. |
+| No single place to see logins, OTP funnels, provider health, anomalies or compliance. | A **web admin panel + JSON control-plane API** and an **AI copilot** that explains anomalies. |
+
+---
+
+## Who it's for
 
 ::: grids
 ::: grid
-::: card "laravel-rebel-bridge-passkeys" icon:package
-WebAuthn passkey step-up driver for Laravel Rebel: bridges spatie/laravel-passkeys into Rebel's step-up registry, issuing phishing-resistant AAL3 challenges.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-bridge-passkeys) · [Reference](/packages/bridge-passkeys)
+::: card "Ecommerce & marketplaces" icon:shopping-cart
+Passwordless customer login, SMS/WhatsApp verification with fallback, step-up on risky checkout and account changes, multi-tenant per brand/country.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-bridge-spatie-otp" icon:package
-Bridge between spatie/laravel-one-time-passwords and Laravel Rebel: exposes email/SMS OTP as an AAL2 step-up driver with full audit telemetry. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-bridge-spatie-otp) · [Reference](/packages/bridge-spatie-otp)
+::: card "Fintech & B2B payments" icon:landmark
+PSD2/SCA dynamic linking on credit orders and payouts, high-assurance recovery, hardware-passkey step-up, a full audit trail for auditors.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channel-bird" icon:package
-Bird (formerly MessageBird) provider for Laravel Rebel Channels: phone verification via the Bird Verify API (SMS), plain SMS delivery, and signed delivery-status webhooks. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-channel-bird) · [Reference](/packages/channel-bird)
+::: card "SaaS platforms" icon:layers
+Multi-tenant isolation, session/device governance, "log out everywhere", anomaly detection and a security operations dashboard.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channel-discord" icon:package
-Discord delivery channel for Laravel Rebel Channels: ship security/SOC alerts (anomaly cases, lockouts, high-risk events) and notifications to a Discord channel via webhook. Part of padosoft/laravel-rebel-*.
+::: card "Regulated & enterprise" icon:shield-check
+NIST 800-63B assurance, GDPR-safe storage by design, queued/Horizon-ready audit, swappable contracts to meet your SIEM and infra.
+:::
+:::
+:::
 
-[GitHub](https://github.com/padosoft/laravel-rebel-channel-discord) · [Reference](/packages/channel-discord)
+---
+
+## Why Rebel is different — the moats
+
+These are the things you **won't** get by gluing together off-the-shelf packages or rolling your own.
+
+::: grids
+::: grid
+::: card "Assurance that actually guards" icon:lock
+A first-class **NIST AAL/AMR** model with a `satisfies()` guard. Email-OTP (AAL1) **cannot** satisfy an action that requires a phishing-resistant passkey (AAL2/3). The framework enforces it — not your `if` statements.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channels" icon:package
-Channel/provider abstraction (SMS/WhatsApp/voice) for Laravel Rebel: verification routing with fallback, cooldown, multi-dimensional rate limiting, and anti toll-fraud/IRSF defences. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-channels) · [Reference](/packages/channels)
+::: card "GDPR-safe by design" icon:fingerprint
+IPs, user-agents and identifiers are stored as **keyed HMACs** with a **versioned pepper + rotation**. No cleartext PII, anywhere — and you can rotate the pepper without breaking historical lookups.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channel-telegram" icon:package
-Telegram bot delivery channel for Laravel Rebel Channels: deliver OTP codes and security alerts to a Telegram chat. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-channel-telegram) · [Reference](/packages/channel-telegram)
+::: card "Audit that can't leak secrets" icon:scroll-text
+A `Redactor` strips OTPs, recovery codes, tokens and webhook secrets **before** they're written. Audit is `sync` or `queue` (Horizon-ready), enriched with country/device, persisted to `rebel_auth_events` — never just the session.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channel-twilio" icon:package
-Twilio provider for Laravel Rebel Channels: phone verification via Twilio Verify (SMS/WhatsApp/voice), message delivery, and signed delivery-status webhooks. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-channel-twilio) · [Reference](/packages/channel-twilio)
+::: card "PSD2 / SCA dynamic linking" icon:banknote
+Step-up confirmations are cryptographically **bound to amount + payee**. Change the cart total and the confirmation expires — exactly what EU regulation requires for B2B credit orders.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-channel-vonage" icon:package
-Vonage provider for Laravel Rebel Channels: phone verification via Vonage Verify (SMS/voice), plain SMS delivery, and signed delivery-receipt webhooks. Part of padosoft/laravel-rebel-*.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-channel-vonage) · [Reference](/packages/channel-vonage)
+::: card "Anti toll-fraud channels" icon:radio-tower
+The channel layer ships **IRSF / toll-fraud** defenses, cooldowns, multi-dimensional rate limiting and **provider fallback** — so one SMS provider outage or attack doesn't take down verification.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-core" icon:package
-Core primitives, value objects and contracts for Laravel Rebel: the enterprise authentication control plane (AAL/AMR assurance, security context, audit, Sanctum tokens, rate-limiting). The entry point of the padosoft/laravel-rebel-* ecosystem.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-core) · [Reference](/packages/core)
+::: card "Telemetry completeness" icon:activity
+Every channel reports sends, **delivery receipts**, cost, country, devices and anomalies through one `AuditLogger` contract — so the admin panel shows the truth, never faked data, never an empty dashboard.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-demo" icon:package
-Demo / integration application for the padosoft/laravel-rebel-* enterprise authentication suite.
-
-[GitHub](https://github.com/padosoft/laravel-rebel-demo) · [Reference](/packages/demo)
+::: card "Composable contracts" icon:puzzle
+Every moving part — `TokenIssuer`, `RiskEvaluator`, `SessionRegistry`, `DeviceTrust`, `BotProtection`, `RateLimiter` — is a **contract** with a sane default you can swap. Bind your SIEM, your risk engine, your infra.
 :::
 :::
 ::: grid
-::: card "laravel-rebel-email-otp" icon:package
-Enterprise passwordless email-OTP login for Laravel Rebel: anti-enumeration, multi-dimensional rate-limiting, multi-tenant/purpose/risk, Sanctum token issuance. Part of padosoft/laravel-rebel-*.
+::: card "AI copilot, not autopilot" icon:bot
+`ai-guard` detects anomalies with **deterministic rules**; the optional AI only **explains and suggests** on sanitized prompts (no PII, no OTP) with human review. It never makes destructive decisions on its own.
+:::
+:::
+:::
 
-[GitHub](https://github.com/padosoft/laravel-rebel-email-otp) · [Reference](/packages/email-otp)
-:::
-:::
-::: grid
-::: card "laravel-rebel-recovery" icon:package
-High-assurance account recovery for Laravel Rebel: single-use HMAC-hashed recovery (backup) codes, generated once at enrolment, with anti-ATO checks. Part of padosoft/laravel-rebel-*.
+---
 
-[GitHub](https://github.com/padosoft/laravel-rebel-recovery) · [Reference](/packages/recovery)
-:::
-:::
-::: grid
-::: card "laravel-rebel-sessions" icon:package
-Device/session registry for Laravel Rebel: session/device tracking, logout-everywhere, refresh-token rotation with reuse detection, and device trust. Part of padosoft/laravel-rebel-*.
+## See it: the Security Operations panel
 
-[GitHub](https://github.com/padosoft/laravel-rebel-sessions) · [Reference](/packages/sessions)
-:::
-:::
-::: grid
-::: card "laravel-rebel-step-up" icon:package
-Step-up authentication for Laravel Rebel: confirm an action/purpose with AAL/AMR assurance, risk-based, and PSD2/SCA dynamic linking. Part of padosoft/laravel-rebel-*.
+Rebel ships a real **web admin panel** (Blade + AJAX + vanilla JS, no mandatory JS framework) to
+monitor logins, OTP/step-up funnels, provider health, audit, anomalies and compliance.
 
-[GitHub](https://github.com/padosoft/laravel-rebel-step-up) · [Reference](/packages/step-up)
-:::
-:::
-::: grid
-::: card "laravel-rebel-admin" icon:package
-Web Admin Panel (Blade + AJAX + vanilla JS) for Laravel Rebel: a security operations dashboard over the Rebel Admin API. Part of padosoft/laravel-rebel-*.
+![Laravel Rebel — Web Admin Panel dashboard](/assets/laravel-rebel-admin-dashboard.png)
 
-[GitHub](https://github.com/padosoft/laravel-rebel-admin) · [Reference](/packages/admin)
-:::
-:::
-::: grid
-::: card "laravel-rebel-admin-api" icon:package
-Control-plane JSON API for Laravel Rebel: security metrics, audit-event explorer, OTP/step-up funnels, provider health, with permission-gated and tenant-scoped read models. Part of padosoft/laravel-rebel-*.
+---
 
-[GitHub](https://github.com/padosoft/laravel-rebel-admin-api) · [Reference](/packages/admin-api)
-:::
-:::
-::: grid
-::: card "laravel-rebel-ai-guard" icon:package
-Anomaly detection + AI security copilot for Laravel Rebel: deterministic rules detect anomaly cases; the optional AI only explains/suggests (sanitized prompts, no PII/OTP, human review). Part of padosoft/laravel-rebel-*.
+## Rebel vs. the alternatives (at a glance)
 
-[GitHub](https://github.com/padosoft/laravel-rebel-ai-guard) · [Reference](/packages/ai-guard)
-:::
-:::
-::: grid
-::: card "laravel-rebel-auth" icon:package
-Meta-package for the padosoft/laravel-rebel-* enterprise authentication control plane: passwordless email-OTP, passkey-first, risk-based step-up with PSD2/SCA, channels, sessions, recovery, anomaly detection and a web admin panel — installs and ties the whole suite together.
+| Capability | **Laravel Rebel** | Fortify alone | Hand-rolled | SaaS IdP (Auth0/Okta) |
+|---|:---:|:---:|:---:|:---:|
+| First-class NIST AAL/AMR assurance model | ✅ | ❌ | ❌ | ➖ |
+| Per-action step-up + PSD2/SCA dynamic linking | ✅ | ❌ | ❌ | ➖ |
+| GDPR-safe keyed-HMAC PII storage with rotation | ✅ | ❌ | ❌ | ➖ |
+| Audit trail with automatic secret redaction | ✅ | ❌ | ❌ | ➖ |
+| SMS/WhatsApp/voice with provider fallback + anti-fraud | ✅ | ❌ | ❌ | ➖ |
+| Self-hosted, you own the data | ✅ | ✅ | ✅ | ❌ |
+| Swappable contracts (risk, sessions, channels…) | ✅ | ❌ | ➖ | ❌ |
+| Runs inside your Laravel app, your DB | ✅ | ✅ | ✅ | ❌ |
 
-[GitHub](https://github.com/padosoft/laravel-rebel-auth) · [Reference](/packages/auth)
-:::
-:::
-::: grid
-::: card "laravel-rebel-bot-protection" icon:package
-Pluggable anti-bot / CAPTCHA gate for Laravel Rebel: server-side verification of Cloudflare Turnstile, Google reCAPTCHA v3 and hCaptcha tokens, fail-closed by default and fully audited. Part of padosoft/laravel-rebel-*.
+> Legend: ✅ built-in · ➖ partial / extra cost / not exposed · ❌ not available.
 
-[GitHub](https://github.com/padosoft/laravel-rebel-bot-protection) · [Reference](/packages/bot-protection)
-:::
-:::
-::: grid
-::: card "laravel-rebel-bridge-fortify" icon:package
-Bridge between Laravel Fortify and Laravel Rebel: exposes password-confirm / passkey / TOTP as step-up drivers, maps Fortify events into the Rebel audit trail, and enables passkey-first login. Part of padosoft/laravel-rebel-*.
+**[→ See the full competitive breakdown](/ecosystem/why-rebel)** — detailed matrices vs Fortify,
+hand-rolled primitives, Spatie, and hosted IdPs.
 
-[GitHub](https://github.com/padosoft/laravel-rebel-bridge-fortify) · [Reference](/packages/bridge-fortify)
-:::
-:::
-::: grid
-::: card "laravel-rebel-bridge-laragear-2fa" icon:package
-Bridge between laragear/two-factor and Laravel Rebel: exposes TOTP as an AAL2 step-up driver, integrates recovery codes, and emits full audit telemetry into the Rebel audit trail. Part of padosoft/laravel-rebel-*.
+---
 
-[GitHub](https://github.com/padosoft/laravel-rebel-bridge-laragear-2fa) · [Reference](/packages/bridge-laragear-2fa)
-:::
-:::
-::: grid
-::: card "laravel-rebel-bridge-otpz" icon:package
-Bridge the benbjurstrom/otpz email one-time-password package into Laravel Rebel step-up. Exposes OTP email magic-code as a step-up driver (AAL2, AMR otp). Part of padosoft/laravel-rebel-*.
+## The ecosystem at a glance
 
-[GitHub](https://github.com/padosoft/laravel-rebel-bridge-otpz) · [Reference](/packages/bridge-otpz)
+Rebel is **one core + feature packages + provider bridges**. The core defines the shared language;
+everything else plugs into it.
+
+```mermaid
+flowchart TB
+  Core["laravel-rebel-core<br/>shared language: assurance · audit · contracts"]
+  Core --> Email["email-otp<br/>passwordless login"]
+  Core --> StepUp["step-up<br/>per-action + SCA"]
+  Core --> Channels["channels<br/>SMS/WhatsApp/voice"]
+  Core --> Sessions["sessions / recovery<br/>device governance"]
+  Core --> AdminApi["admin-api<br/>control-plane JSON"]
+  Channels --> Providers["twilio · vonage · bird<br/>telegram · discord"]
+  StepUp --> Bridges["fortify · passkeys<br/>laragear-2fa · otpz · spatie-otp"]
+  AdminApi --> Admin["admin<br/>web panel (SOC)"]
+  AdminApi --> AiGuard["ai-guard<br/>anomaly + AI copilot"]
+  Core --> BotProtection["bot-protection<br/>Turnstile/reCAPTCHA/hCaptcha"]
+```
+
+**[→ Package Map](/ecosystem/package-map)** · **[→ Dependency Graph](/ecosystem/dependency-graph)** · **[→ Capability Matrix](/ecosystem/capability-matrix)**
+
+---
+
+## Start in 30 seconds
+
+::: steps
+1. **Install the bundle**
+   ```bash
+   composer require padosoft/laravel-rebel-auth
+   ```
+   The `auth` meta-package pulls in the recommended suite. Need just the primitives? `composer require padosoft/laravel-rebel-core`.
+
+2. **Set the pepper** (the secret behind every keyed HMAC)
+   ```dotenv
+   REBEL_PEPPER_V1="$(php -r 'echo bin2hex(random_bytes(32));')"
+   REBEL_PEPPER_CURRENT=1
+   ```
+
+3. **Migrate & validate**
+   ```bash
+   php artisan migrate
+   php artisan rebel:validate-config   # fail-fast, CI-friendly
+   ```
 :::
-:::
-:::
+
+**[→ Full Quickstart](/quickstart)** · **[→ Install Matrix](/install-matrix)** · **[→ Worked Example](/guides/worked-example)**
+
+---
+
+## Batteries included for AI-assisted development
+
+Every Rebel repo ships **AI batteries** — a `CLAUDE.md` working guide, an `AGENTS.md` workflow
+contract, and invocable `.claude/skills/` encoding the TDD loop, PHPStan-max recipes and the
+security/telemetry rules. Open any package in Claude Code, Cursor, Copilot or Codex and your agent
+already knows the house rules — PRs land green on the first try.
+
+---
 
 ## Package index
 
+All 22 packages, grouped by what they do. Each links to its reference page and repo.
+
 | Package | Responsibility | Composer name |
 |---|---|---|
-| [`laravel-rebel-bridge-passkeys`](https://github.com/padosoft/laravel-rebel-bridge-passkeys) | WebAuthn passkey step-up driver for Laravel Rebel: bridges spatie/laravel-passkeys into Rebel's step-up registry, issuing phishing-resistant AAL3 challenges. | `padosoft/laravel-rebel-bridge-passkeys` |
-| [`laravel-rebel-bridge-spatie-otp`](https://github.com/padosoft/laravel-rebel-bridge-spatie-otp) | Bridge between spatie/laravel-one-time-passwords and Laravel Rebel: exposes email/SMS OTP as an AAL2 step-up driver with full audit telemetry. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-bridge-spatie-otp` |
-| [`laravel-rebel-channel-bird`](https://github.com/padosoft/laravel-rebel-channel-bird) | Bird (formerly MessageBird) provider for Laravel Rebel Channels: phone verification via the Bird Verify API (SMS), plain SMS delivery, and signed delivery-status webhooks. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channel-bird` |
-| [`laravel-rebel-channel-discord`](https://github.com/padosoft/laravel-rebel-channel-discord) | Discord delivery channel for Laravel Rebel Channels: ship security/SOC alerts (anomaly cases, lockouts, high-risk events) and notifications to a Discord channel via webhook. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channel-discord` |
-| [`laravel-rebel-channels`](https://github.com/padosoft/laravel-rebel-channels) | Channel/provider abstraction (SMS/WhatsApp/voice) for Laravel Rebel: verification routing with fallback, cooldown, multi-dimensional rate limiting, and anti toll-fraud/IRSF defences. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channels` |
-| [`laravel-rebel-channel-telegram`](https://github.com/padosoft/laravel-rebel-channel-telegram) | Telegram bot delivery channel for Laravel Rebel Channels: deliver OTP codes and security alerts to a Telegram chat. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channel-telegram` |
-| [`laravel-rebel-channel-twilio`](https://github.com/padosoft/laravel-rebel-channel-twilio) | Twilio provider for Laravel Rebel Channels: phone verification via Twilio Verify (SMS/WhatsApp/voice), message delivery, and signed delivery-status webhooks. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channel-twilio` |
-| [`laravel-rebel-channel-vonage`](https://github.com/padosoft/laravel-rebel-channel-vonage) | Vonage provider for Laravel Rebel Channels: phone verification via Vonage Verify (SMS/voice), plain SMS delivery, and signed delivery-receipt webhooks. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-channel-vonage` |
-| [`laravel-rebel-core`](https://github.com/padosoft/laravel-rebel-core) | Core primitives, value objects and contracts for Laravel Rebel: the enterprise authentication control plane (AAL/AMR assurance, security context, audit, Sanctum tokens, rate-limiting). The entry point of the padosoft/laravel-rebel-* ecosystem. | `padosoft/laravel-rebel-core` |
-| [`laravel-rebel-demo`](https://github.com/padosoft/laravel-rebel-demo) | Demo / integration application for the padosoft/laravel-rebel-* enterprise authentication suite. | `padosoft/laravel-rebel-demo` |
-| [`laravel-rebel-email-otp`](https://github.com/padosoft/laravel-rebel-email-otp) | Enterprise passwordless email-OTP login for Laravel Rebel: anti-enumeration, multi-dimensional rate-limiting, multi-tenant/purpose/risk, Sanctum token issuance. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-email-otp` |
-| [`laravel-rebel-recovery`](https://github.com/padosoft/laravel-rebel-recovery) | High-assurance account recovery for Laravel Rebel: single-use HMAC-hashed recovery (backup) codes, generated once at enrolment, with anti-ATO checks. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-recovery` |
-| [`laravel-rebel-sessions`](https://github.com/padosoft/laravel-rebel-sessions) | Device/session registry for Laravel Rebel: session/device tracking, logout-everywhere, refresh-token rotation with reuse detection, and device trust. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-sessions` |
-| [`laravel-rebel-step-up`](https://github.com/padosoft/laravel-rebel-step-up) | Step-up authentication for Laravel Rebel: confirm an action/purpose with AAL/AMR assurance, risk-based, and PSD2/SCA dynamic linking. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-step-up` |
-| [`laravel-rebel-admin`](https://github.com/padosoft/laravel-rebel-admin) | Web Admin Panel (Blade + AJAX + vanilla JS) for Laravel Rebel: a security operations dashboard over the Rebel Admin API. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-admin` |
-| [`laravel-rebel-admin-api`](https://github.com/padosoft/laravel-rebel-admin-api) | Control-plane JSON API for Laravel Rebel: security metrics, audit-event explorer, OTP/step-up funnels, provider health, with permission-gated and tenant-scoped read models. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-admin-api` |
-| [`laravel-rebel-ai-guard`](https://github.com/padosoft/laravel-rebel-ai-guard) | Anomaly detection + AI security copilot for Laravel Rebel: deterministic rules detect anomaly cases; the optional AI only explains/suggests (sanitized prompts, no PII/OTP, human review). Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-ai-guard` |
-| [`laravel-rebel-auth`](https://github.com/padosoft/laravel-rebel-auth) | Meta-package for the padosoft/laravel-rebel-* enterprise authentication control plane: passwordless email-OTP, passkey-first, risk-based step-up with PSD2/SCA, channels, sessions, recovery, anomaly detection and a web admin panel — installs and ties the whole suite together. | `padosoft/laravel-rebel-auth` |
-| [`laravel-rebel-bot-protection`](https://github.com/padosoft/laravel-rebel-bot-protection) | Pluggable anti-bot / CAPTCHA gate for Laravel Rebel: server-side verification of Cloudflare Turnstile, Google reCAPTCHA v3 and hCaptcha tokens, fail-closed by default and fully audited. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-bot-protection` |
-| [`laravel-rebel-bridge-fortify`](https://github.com/padosoft/laravel-rebel-bridge-fortify) | Bridge between Laravel Fortify and Laravel Rebel: exposes password-confirm / passkey / TOTP as step-up drivers, maps Fortify events into the Rebel audit trail, and enables passkey-first login. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-bridge-fortify` |
-| [`laravel-rebel-bridge-laragear-2fa`](https://github.com/padosoft/laravel-rebel-bridge-laragear-2fa) | Bridge between laragear/two-factor and Laravel Rebel: exposes TOTP as an AAL2 step-up driver, integrates recovery codes, and emits full audit telemetry into the Rebel audit trail. Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-bridge-laragear-2fa` |
-| [`laravel-rebel-bridge-otpz`](https://github.com/padosoft/laravel-rebel-bridge-otpz) | Bridge the benbjurstrom/otpz email one-time-password package into Laravel Rebel step-up. Exposes OTP email magic-code as a step-up driver (AAL2, AMR otp). Part of padosoft/laravel-rebel-*. | `padosoft/laravel-rebel-bridge-otpz` |
+| [`laravel-rebel-core`](/packages/core) | Shared primitives: assurance (AAL/AMR), security context, audit, keyed hashing, contracts. The foundation. | `padosoft/laravel-rebel-core` |
+| [`laravel-rebel-auth`](/packages/auth) | Meta-package: installs and wires the recommended suite together. Start here. | `padosoft/laravel-rebel-auth` |
+| [`laravel-rebel-email-otp`](/packages/email-otp) | Passwordless email-OTP login (web + mobile/Sanctum), anti-enumeration, rate-limited. | `padosoft/laravel-rebel-email-otp` |
+| [`laravel-rebel-step-up`](/packages/step-up) | Per-action step-up with risk-based escalation and PSD2/SCA dynamic linking. | `padosoft/laravel-rebel-step-up` |
+| [`laravel-rebel-channels`](/packages/channels) | SMS/WhatsApp/voice abstraction: fallback, cooldown, rate limiting, anti toll-fraud/IRSF. | `padosoft/laravel-rebel-channels` |
+| [`laravel-rebel-channel-twilio`](/packages/channel-twilio) | Twilio provider: Verify (SMS/WhatsApp/voice), delivery, signed webhooks. | `padosoft/laravel-rebel-channel-twilio` |
+| [`laravel-rebel-channel-vonage`](/packages/channel-vonage) | Vonage provider: Verify (SMS/voice), SMS delivery, signed delivery receipts. | `padosoft/laravel-rebel-channel-vonage` |
+| [`laravel-rebel-channel-bird`](/packages/channel-bird) | Bird (ex-MessageBird) provider: Verify API (SMS), delivery, signed webhooks. | `padosoft/laravel-rebel-channel-bird` |
+| [`laravel-rebel-channel-telegram`](/packages/channel-telegram) | Telegram bot channel: deliver OTP codes and security alerts to a chat. | `padosoft/laravel-rebel-channel-telegram` |
+| [`laravel-rebel-channel-discord`](/packages/channel-discord) | Discord channel: ship SOC alerts (anomalies, lockouts, high-risk events) via webhook. | `padosoft/laravel-rebel-channel-discord` |
+| [`laravel-rebel-sessions`](/packages/sessions) | Device/session registry, logout-everywhere, refresh-token rotation with reuse detection. | `padosoft/laravel-rebel-sessions` |
+| [`laravel-rebel-recovery`](/packages/recovery) | High-assurance account recovery: single-use HMAC-hashed backup codes, anti-ATO. | `padosoft/laravel-rebel-recovery` |
+| [`laravel-rebel-bot-protection`](/packages/bot-protection) | Anti-bot/CAPTCHA gate: Turnstile, reCAPTCHA v3, hCaptcha — fail-closed, audited. | `padosoft/laravel-rebel-bot-protection` |
+| [`laravel-rebel-bridge-fortify`](/packages/bridge-fortify) | Bridge Fortify: password-confirm/passkey/TOTP as step-up drivers, passkey-first login. | `padosoft/laravel-rebel-bridge-fortify` |
+| [`laravel-rebel-bridge-passkeys`](/packages/bridge-passkeys) | WebAuthn passkey step-up driver (spatie/laravel-passkeys), phishing-resistant AAL3. | `padosoft/laravel-rebel-bridge-passkeys` |
+| [`laravel-rebel-bridge-laragear-2fa`](/packages/bridge-laragear-2fa) | TOTP via laragear/two-factor as an AAL2 step-up driver, recovery-code aware. | `padosoft/laravel-rebel-bridge-laragear-2fa` |
+| [`laravel-rebel-bridge-spatie-otp`](/packages/bridge-spatie-otp) | Email/SMS OTP via spatie/laravel-one-time-passwords as an AAL2 step-up driver. | `padosoft/laravel-rebel-bridge-spatie-otp` |
+| [`laravel-rebel-bridge-otpz`](/packages/bridge-otpz) | Email magic-code OTP via benbjurstrom/otpz as a step-up driver (AAL2). | `padosoft/laravel-rebel-bridge-otpz` |
+| [`laravel-rebel-admin-api`](/packages/admin-api) | Control-plane JSON API: metrics, audit explorer, OTP/step-up funnels, provider health. | `padosoft/laravel-rebel-admin-api` |
+| [`laravel-rebel-admin`](/packages/admin) | Web Admin Panel (Blade + AJAX + vanilla JS): the security operations dashboard. | `padosoft/laravel-rebel-admin` |
+| [`laravel-rebel-ai-guard`](/packages/ai-guard) | Anomaly detection + AI copilot that explains (never decides), on sanitized prompts. | `padosoft/laravel-rebel-ai-guard` |
+| [`laravel-rebel-demo`](/packages/demo) | Demo / integration app for the whole suite — a reference wiring you can read. | `padosoft/laravel-rebel-demo` |
+
+---
 
 ## First principles
 
-Laravel Rebel is an enterprise authentication control plane. It separates primitive assurance concepts from delivery channels, step-up decisions, admin operations, AI-assisted investigation, recovery, session governance and framework bridges.
+Laravel Rebel separates **primitive assurance concepts** from delivery channels, step-up decisions,
+admin operations, AI-assisted investigation, recovery, session governance and framework bridges. The
+shared language lives in `laravel-rebel-core`; every other package builds on it without re-defining
+the global assurance model. That boundary is what lets the suite stay modular while remaining
+auditable end-to-end.
 
-```mermaid
-flowchart LR
-  Core[laravel-rebel-core] --> Email[Email OTP]
-  Core --> Channels[Channels]
-  Core --> StepUp[Step-up]
-  Core --> Sessions[Sessions]
-  Core --> Recovery[Recovery]
-  Core --> AdminApi[Admin API]
-  AdminApi --> Admin[Admin UI]
-  Channels --> Twilio[Twilio]
-  Channels --> Vonage[Vonage]
-  Channels --> Bird[Bird]
-  Channels --> Telegram[Telegram]
-  Channels --> Discord[Discord]
-  StepUp --> Bridges[Fortify / Passkeys / TOTP / OTPZ]
-  AdminApi --> AiGuard[AI Guard]
-```
-
+::: callout tip
+**Where to go next:** new to the concepts? Start with [Motivation](/concepts/motivazione) and
+[Assurance Theory](/concepts/assurance-theory). Ready to build? Jump to the
+[Quickstart](/quickstart) or a [guide](/guides/passwordless-login). Evaluating? Read
+[Why Rebel](/ecosystem/why-rebel).
+:::

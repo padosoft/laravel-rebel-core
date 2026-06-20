@@ -1,33 +1,71 @@
+---
+title: laravel-rebel-channel-telegram
+description: Deliver Rebel OTP codes and security alerts straight to a Telegram chat — a bounded delivery channel that reports every send into the audit trail.
+---
+
 # laravel-rebel-channel-telegram
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-channel-telegram) · Composer package: `padosoft/laravel-rebel-channel-telegram`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-channel-telegram) · Composer: `padosoft/laravel-rebel-channel-telegram` · MIT
 
-## Motivazione
+> **A Telegram bot that speaks Rebel.** Drop in a delivery channel that pushes OTP codes and
+> security alerts to a Telegram chat — with delivery telemetry flowing back into the core audit
+> trail, and never an OTP in the logs.
 
-Telegram bot delivery channel for Laravel Rebel Channels: deliver OTP codes and security alerts to a Telegram chat. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A **delivery channel** under the Rebel Channels umbrella. It takes a message the suite already wants
+to send — a one-time code, a "new sign-in" alert — and delivers it to a Telegram chat through the
+Bot API. It owns one bounded job: the Telegram transport. Everything about *when* to send, *what*
+assurance the code carries, and *how* it's audited stays in `laravel-rebel-core`.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Email and SMS are the usual second factor, but they're slow, expensive, and easy to phish or
+intercept. Plenty of teams already live in Telegram and want OTP codes and login alerts where they
+actually read — instantly, for free, on a device they control. Wiring the Bot API by hand means
+handling tokens, retries, and HTTP failures yourself, and then bolting on logging so the security
+team can see whether a code was ever delivered. This package gives you that channel pre-wired and
+already plugged into the Rebel audit trail.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+- A `TelegramDeliveryChannel` that delivers OTP codes and security alerts to a Telegram chat.
+- A `TelegramGateway` contract with an HTTP implementation (`HttpTelegramGateway`) over the Bot API.
+- A `FakeTelegramGateway` so your tests never hit the network.
+- Delivery telemetry that feeds the core audit trail — sends and outcomes land in `rebel_auth_events`, never the OTP itself.
+- One config file (`config/rebel-channel-telegram.php`) and zero routes or migrations to reason about.
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-channel-telegram]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- Your users already live in Telegram and you want OTP codes delivered there instead of by SMS.
+- You want **free, instant** second-factor delivery without an SMS-gateway bill.
+- You need security alerts ("new device signed in") pushed to a chat your team watches.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-channel-telegram
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+Set your bot token and target chat in `config/rebel-channel-telegram.php` (publish it first), then
+let the Rebel Channels layer route OTP and alert deliveries through this channel. In tests, bind
+`FakeTelegramGateway` instead of the HTTP gateway to assert what would have been sent without
+touching the network.
+
+## How it fits
+
+This package is a leaf: it depends on `padosoft/laravel-rebel-channels` for the channel contract and
+on `padosoft/laravel-rebel-core` for the audit and assurance vocabulary. It adds no routes, models,
+or migrations — it's pure transport. Swap it in or out without touching the rest of the suite, and
+every send it makes stays visible in the same audit trail as every other channel.
+
+A single shared audit trail across Telegram, Discord, SMS and email is exactly what bolt-on
+notification packages don't give you — see [Why Rebel](/ecosystem/why-rebel).
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -77,7 +115,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -88,7 +126,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -98,7 +136,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### Architecture decisions
 
 ::: collapsible "Problem: keep laravel-rebel-channel-telegram replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -112,15 +150,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-channel-telegram
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\HttpTelegramGatewayTest.php`
 - `tests\Feature\NotConfiguredTest.php`

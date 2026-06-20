@@ -1,33 +1,56 @@
+---
+title: laravel-rebel-bridge-fortify
+description: Turns Laravel Fortify into Rebel step-up drivers — password-confirm, passkey and TOTP — maps Fortify events into the audit trail and enables passkey-first login.
+---
+
 # laravel-rebel-bridge-fortify
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-fortify) · Composer package: `padosoft/laravel-rebel-bridge-fortify`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-fortify) · Composer: `padosoft/laravel-rebel-bridge-fortify` · MIT
 
-## Motivazione
+> **Fortify, promoted to a Rebel control plane.** Your existing Fortify password-confirm, passkey and TOTP flows become first-class step-up drivers — graded on the NIST assurance model and fully audited — without rewriting a single Fortify line.
 
-Bridge between Laravel Fortify and Laravel Rebel: exposes password-confirm / passkey / TOTP as step-up drivers, maps Fortify events into the Rebel audit trail, and enables passkey-first login. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A thin bridge that wires Laravel Fortify into the Rebel step-up registry. It registers three drivers (`PasswordConfirmStepUpDriver`, `PasskeyConfirmStepUpDriver`, `TotpStepUpDriver`), subscribes to Fortify's events and replays their security-significant outcomes into the Rebel audit trail, and ships an opt-in `PasskeyFirstLogin` so users can start a session with a passkey. It does **not** reimplement Fortify — Fortify keeps owning the screens and the credential store.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Fortify gives you the mechanics of password confirmation, two-factor and passkeys, but it has no notion of *how strong* a confirmation was, no shared audit trail, and no way for the rest of your app to ask "has this user re-proven themselves strongly enough for this action?" The bridge fills that gap: every Fortify outcome is mapped to an AAL/AMR level and recorded once, in the same `rebel_auth_events` stream every other Rebel package reads.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | What it does |
+|---|---|
+| **Password-confirm driver** | `PasswordConfirmStepUpDriver` exposes Fortify's `password.confirm` as a Rebel step-up factor (`fortify_password_confirm`, **web-only** — mobile uses a token-native step-up instead). |
+| **Passkey driver** | `PasskeyConfirmStepUpDriver` re-confirms with a WebAuthn passkey for phishing-resistant assurance, via the `PasskeyAuthenticator` / `PasskeyConfirmer` contracts. |
+| **TOTP driver** | `TotpStepUpDriver` accepts Fortify's authenticator-app code as an AAL2 factor. |
+| **Event mapping** | `FortifyEventSubscriber` translates Fortify events into Rebel audit events — never logging the secret. |
+| **Passkey-first login** | `PasskeyFirstLogin` lets users open a session with a passkey instead of a password. |
+| **Test doubles** | `FakePasskeyAuthenticator` / `FakePasskeyConfirmer` for deterministic tests. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-bridge-fortify]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You already run **Laravel Fortify** and want its flows graded and audited by Rebel instead of treated as opaque booleans.
+- You want **passkey-first login** on top of Fortify without building the ceremony yourself.
+- You need Fortify's password-confirm and TOTP to count as proper **step-up factors** for sensitive actions.
+- You're standardizing audit telemetry across mixed auth providers and want Fortify in the same stream.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-bridge-fortify
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+The bridge auto-registers its drivers; `config/rebel-bridge-fortify.php` lets you tune which factors are exposed. Bind your own `PasskeyAuthenticator` / `PasskeyConfirmer` to plug in a custom WebAuthn stack, or use the shipped fakes in tests.
+
+## How it fits
+
+This package sits between **laravel-fortify** (the upstream credential and ceremony layer) and **laravel-rebel-step-up** (the consumer that runs step-up challenges). It maps Fortify outcomes into the AAL/AMR assurance model and audit contract defined by **laravel-rebel-core**, so a Fortify password-confirm and a passkey from any other bridge are compared on the same scale and land in the same audit trail.
+
+A drop-in 2FA package gives you a screen; this gives you a graded, audited, swappable step-up factor. See **[Why Rebel](/ecosystem/why-rebel)**.
+
+## Reference
 
 ### Runtime files
 
@@ -84,7 +107,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -95,7 +118,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -107,7 +130,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### ADR
 
 ::: collapsible "Problem: keep laravel-rebel-bridge-fortify replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -121,15 +144,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-bridge-fortify
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test and verification surface
 
 - `tests\Feature\EventMappingTest.php`
 - `tests\Feature\PasskeyConfirmDriverTest.php`

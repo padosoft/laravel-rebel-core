@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-20
+
+### Changed
+- **Enterprise-grade documentation overhaul (`docs-site/`).** Reworked the centralized Laravel Rebel
+  docs from auto-generated, robotic stubs into human, evaluator-ready content:
+  - New homepage with the project banner, a "what it is in one minute", a problem→solution table,
+    audience cards, the eight ecosystem "moats", the Web Admin Panel screenshot, a compact
+    competitive matrix and a grouped package index.
+  - New **Why Rebel** page with five moats and six competitive matrices (vs Fortify, hand-rolled,
+    core vs alternatives, hosted IdPs, commerce platforms, single-provider SMS SDKs) plus an honest
+    "when Rebel is overkill" section.
+  - Humanized the Ecosystem pages (capability matrix, role-grouped package map, dependency graph) and
+    the package reference index; removed the placeholder academic theory blocks.
+  - Rewrote all 22 package pages and every Concepts / Architecture / Guides / Best-practices /
+    Operations page into distinct, topic-faithful content while preserving the real per-package
+    reference data (files, contracts, routes, migrations, tests).
+- Added the banner and admin-dashboard images to `docs-site/assets/`.
+
 ## [0.1.1] - 2026-06-03
 
 ### Added

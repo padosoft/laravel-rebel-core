@@ -1,33 +1,114 @@
+---
+title: laravel-rebel-core
+description: The foundation of the Laravel Rebel suite — shared value objects, the NIST AAL/AMR assurance model, security context, keyed hashing, the redacting audit trail and the contracts every other package builds on.
+---
+
 # laravel-rebel-core
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-core) · Composer package: `padosoft/laravel-rebel-core`
+![Laravel Rebel](/assets/laravel-rebel-banner.png)
 
-## Motivazione
+[GitHub repository](https://github.com/padosoft/laravel-rebel-core) · Composer: `padosoft/laravel-rebel-core` · MIT
 
-Core primitives, value objects and contracts for Laravel Rebel: the enterprise authentication control plane (AAL/AMR assurance, security context, audit, Sanctum tokens, rate-limiting). The entry point of the padosoft/laravel-rebel-* ecosystem.
+> **The heart of the ecosystem.** Small, stable, and depended on by everything else: `-core` defines
+> the shared *language* — value objects, the assurance model, security context, keyed hashing, the
+> audit trail and the contracts — that the rest of the Laravel Rebel suite is built on.
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+::: callout info
+You usually don't install `-core` on its own — it comes in as a dependency of the feature packages.
+But you can use it stand-alone for its value objects and contracts.
+:::
 
-## Teoria
+---
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+## What it is
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+The core is deliberately **small and slow-changing**. It contains no routes, no UI, and no hard
+dependency on Fortify, Twilio or any AI provider. What it *does* provide is the vocabulary that lets
+20+ other packages speak to each other and stay auditable end-to-end:
 
-## Design + diagramma
+- a typed **assurance model** (NIST AAL/AMR) with a guard that enforces it,
+- **keyed hashing** so no PII is ever stored in cleartext,
+- a **redacting audit trail** that can't leak secrets,
+- and a set of **contracts** you can swap to bind your own infrastructure.
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-core]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## The problem it solves
+
+Most Laravel apps treat "is this user authenticated strongly enough?" as a boolean and store IPs,
+emails and user-agents in cleartext. That falls apart the moment you have sensitive actions, regulated
+payments, or a GDPR audit. The core fixes the substrate: assurance becomes a first-class type, PII
+becomes a keyed HMAC, and every security-significant outcome flows through one audit contract.
+
+---
+
+## What's inside
+
+| Area | What you get |
+|---|---|
+| **Identifiers** | `EmailIdentifier`, `PhoneIdentifier`, `GenericIdentifier` — normalize and mask email/phone. |
+| **Keyed hashing** | `KeyedHasher` / `HmacKeyedHasher` — HMAC with a **versioned pepper** and rotation (for email/IP/OTP), constant-time compare. |
+| **Assurance** | `Aal`, `AssuranceLevel` — the model that stops an email-OTP (AAL1) from "covering" an action that needs a passkey. |
+| **Context** | `SecurityContext`, `TenantContext`, `DeviceContext` — request context with IP/UA already hashed. |
+| **Risk** | `RiskAssessment`, `RiskLevel`, `RecommendedAction`. |
+| **Auth** | `LoginResult` (web \| token), `TokenPair` (Sanctum access + refresh). |
+| **Audit** | `AuditEvent`, `DatabaseAuditLogger` (+ `rebel_auth_events`), `Redactor` (never logs OTP/secret). |
+| **Contracts** | `TokenIssuer`, `SubjectResolver`, `TenantResolver`, `RiskEvaluator`, `AuditLogger`, `SessionRegistry`, `DeviceTrust`, `BotProtection`, `RateLimiter`, `Clock` (PSR-20). |
+| **Tenancy** | `CurrentTenant` + `BelongsToTenant` trait — per-tenant isolation. |
+| **Config** | `php artisan rebel:validate-config` — fail-fast in CI. |
+
+## When to use it directly
+
+- You're building **another Rebel package** or a custom integration and need the shared contracts.
+- You want **GDPR-safe keyed hashing** or the **assurance model** in your own code, without the rest of the suite.
+- You're **swapping an implementation** (audit sink, risk engine, session registry) by binding your own contract.
+
+---
+
+## Worked example — the central security rule
+
+```php
+use Padosoft\Rebel\Core\Assurance\Aal;
+use Padosoft\Rebel\Core\Assurance\AssuranceLevel;
+
+$emailOtp = new AssuranceLevel(Aal::Aal1, phishingResistant: false, amr: ['otp', 'email']);
+$passkey  = new AssuranceLevel(Aal::Aal2, phishingResistant: true,  amr: ['webauthn']);
+
+// An action that requires AAL2 phishing-resistant:
+$emailOtp->satisfies(Aal::Aal2, requirePhishingResistant: true); // false ← email-OTP is not enough
+$passkey->satisfies(Aal::Aal2, requirePhishingResistant: true);  // true
 ```
 
-## Modello dati / contratto
+```php
+// Audit with automatic secret redaction — the OTP never reaches the database.
+use Padosoft\Rebel\Core\Audit\AuditEvent;
+use Padosoft\Rebel\Core\Audit\AuthEventType;
+use Padosoft\Rebel\Core\Contracts\AuditLogger;
+
+app(AuditLogger::class)->record(new AuditEvent(
+    type: AuthEventType::EmailOtpVerified->value,
+    guard: 'customers',
+    identifierHmac: $h->hash, keyVersion: $h->keyVersion,
+    purpose: 'customer-login',
+    aal: Aal::Aal1, amr: ['otp', 'email'],
+    metadata: ['otp' => '123456'], // ← stored as "[REDACTED]"
+));
+```
+
+## How to extend it
+
+Most extension happens by **binding your own implementation of a core contract** in the container —
+swap the `AuditLogger` to ship events to a SIEM, decorate it (`ContextEnrichingAuditLogger`) or queue
+it (`QueuedAuditLogger`); implement `RiskEvaluator`, `SessionRegistry`, `DeviceTrust`, `TokenIssuer`,
+etc. Each ships a sane default and is meant to be overridden per app.
+
+## Why the core, vs. the alternatives
+
+There is no drop-in package that gives you a shared auth **core** with first-class NIST assurance,
+keyed hashing with rotation and built-in audit redaction. See the full breakdown in
+**[Why Rebel → Matrix 3](/ecosystem/why-rebel)**.
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -67,15 +148,8 @@ flowchart LR
 - `src\Identifiers\GenericIdentifier.php`
 - `src\Identifiers\PhoneIdentifier.php`
 
-### Service providers
+### Service provider
 
-- `src\RebelCoreServiceProvider.php`
-
-### Services and managers
-
-- `src\Contracts\SessionRegistry.php`
-- `src\Contracts\SubjectResolver.php`
-- `src\Contracts\TenantResolver.php`
 - `src\RebelCoreServiceProvider.php`
 
 ### Contracts
@@ -92,14 +166,6 @@ flowchart LR
 - `src\Contracts\TenantResolver.php`
 - `src\Contracts\TokenIssuer.php`
 
-### Controllers
-
-None detected in the package tree.
-
-### Middleware
-
-None detected in the package tree.
-
 ### Models
 
 - `src\Models\RebelAuthEvent.php`
@@ -112,15 +178,11 @@ None detected in the package tree.
 
 - `database\migrations\create_rebel_auth_events_table.php`
 
-### Routes
-
-None detected in the package tree.
-
 ### Commands
 
 - `src\Console\ValidateConfigCommand.php`
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -130,7 +192,7 @@ None detected in the package tree.
 | `psr/clock` | `^1.0` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -140,29 +202,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
-
-::: collapsible "Problem: keep laravel-rebel-core replaceable"
-Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
-
-Consequences: applications can adopt the package without coupling every other Rebel module to its internals.
-:::
-
-::: collapsible "Problem: package-specific behavior must remain auditable"
-Decision: all security-significant outcomes should emit or feed audit events through the core vocabulary.
-
-Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
-:::
-
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-core
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\AuditDispatchTest.php`
 - `tests\Feature\BelongsToTenantTest.php`
@@ -181,10 +221,13 @@ php artisan migrate
 - `tests\Unit\Identifiers\PhoneIdentifierTest.php`
 - `tests\Unit\Risk\RiskAssessmentTest.php`
 - `tests\Unit\Support\RedactorTest.php`
-- `tests\Unit\SkeletonTest.php`
-- `tests\Pest.php`
-- `tests\TestCase.php`
 
 ::: callout warning
-Do not copy internal test-only classes into an application. Treat file lists as a source map for maintainers and auditors, not as an installation recipe by themselves.
+File lists are a **source map** for maintainers and auditors — not an installation recipe. Don't copy
+internal test-only classes into an application.
+:::
+
+::: callout tip
+Next: see how the core fits the suite in the **[Package Map](/ecosystem/package-map)**, or read the
+**[Configuration reference](/reference/configuration)** for every `config/rebel-core.php` key.
 :::

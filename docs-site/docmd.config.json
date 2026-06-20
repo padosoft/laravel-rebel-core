@@ -78,6 +78,10 @@
       "icon": "network",
       "children": [
         {
+          "title": "Why Rebel",
+          "path": "/ecosystem/why-rebel"
+        },
+        {
           "title": "Package Map",
           "path": "/ecosystem/package-map"
         },

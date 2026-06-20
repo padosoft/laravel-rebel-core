@@ -1,33 +1,58 @@
+---
+title: laravel-rebel-bridge-spatie-otp
+description: Bridges spatie/laravel-one-time-passwords into Rebel as an AAL2 email/SMS OTP step-up driver — graded, swappable and fully audited.
+---
+
 # laravel-rebel-bridge-spatie-otp
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-spatie-otp) · Composer package: `padosoft/laravel-rebel-bridge-spatie-otp`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-spatie-otp) · Composer: `padosoft/laravel-rebel-bridge-spatie-otp` · MIT
 
-## Motivazione
+> **Email and SMS one-time codes, done right.** Turn spatie/laravel-one-time-passwords into an AAL2 Rebel step-up factor — graded on the assurance model and fully audited, with the code never reaching the log.
 
-Bridge between spatie/laravel-one-time-passwords and Laravel Rebel: exposes email/SMS OTP as an AAL2 step-up driver with full audit telemetry. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A bridge that registers spatie/laravel-one-time-passwords as a Rebel step-up driver (`SpatieOtpStepUpDriver`). It generates and verifies one-time passwords delivered over email or SMS through the `OneTimePasswordBroker` contract — backed by `SpatieOneTimePasswordBroker` — and reports an AAL2 / AMR `otp` outcome into Rebel's assurance model and audit trail. spatie keeps owning generation, storage and expiry.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Email and SMS OTP is the most familiar second factor, but spatie/laravel-one-time-passwords on its own has no shared assurance grade and no cross-package audit trail, and it's easy to accidentally log the code. The bridge maps each verification to an AAL2 grade, records every send and outcome once in `rebel_auth_events`, and routes the secret through the core redactor so it can never leak.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | What it does |
+|---|---|
+| **OTP step-up driver** | `SpatieOtpStepUpDriver` exposes email/SMS one-time passwords as an AAL2 (AMR `otp`) Rebel factor. |
+| **Broker abstraction** | `OneTimePasswordBroker` contract with `SpatieOneTimePasswordBroker` as the default. |
+| **Full audit telemetry** | Every challenge and verification is recorded through the core audit trail — never the code. |
+| **Test double** | `FakeOneTimePasswordBroker` for deterministic generate/verify tests. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-bridge-spatie-otp]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You already use **spatie/laravel-one-time-passwords** and want it graded and audited inside Rebel.
+- You need an **email or SMS OTP** step-up factor with the lowest user friction.
+- You want a familiar fallback factor alongside stronger ones, on the same assurance scale.
+- You're consolidating mixed providers into one audit trail.
+
+## When *not* to use it
+
+Email/SMS OTP is AAL2, not phishing-resistant — codes can be relayed or intercepted. For high-value actions, pair it with **laravel-rebel-bridge-passkeys** (AAL3).
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-bridge-spatie-otp
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+The bridge auto-registers `SpatieOtpStepUpDriver`; `config/rebel-bridge-spatie-otp.php` exposes its options. Bind your own `OneTimePasswordBroker` to customize delivery, or use `FakeOneTimePasswordBroker` in tests.
+
+## How it fits
+
+This package wraps **spatie/laravel-one-time-passwords** (the upstream OTP implementation) and registers it with **laravel-rebel-step-up** (the step-up consumer). It maps each verification onto the AAL/AMR model and audit contract from **laravel-rebel-core**, placing email/SMS OTP at AAL2 — below the phishing-resistant passkey bridge in audit reasoning.
+
+A standalone OTP package sends a code; this one grades it AAL2, redacts the secret and audits it alongside every other factor. See **[Why Rebel](/ecosystem/why-rebel)**.
+
+## Reference
 
 ### Runtime files
 
@@ -80,7 +105,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -91,7 +116,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -102,7 +127,7 @@ None detected in the package tree.
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 | `spatie/laravel-one-time-passwords` | `^1.0` |
 
-## ADR
+### ADR
 
 ::: collapsible "Problem: keep laravel-rebel-bridge-spatie-otp replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -116,15 +141,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-bridge-spatie-otp
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test and verification surface
 
 - `tests\Feature\SpatieOtpDriverTest.php`
 - `tests\Fixtures\User.php`

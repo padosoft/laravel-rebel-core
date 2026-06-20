@@ -1,33 +1,67 @@
+---
+title: laravel-rebel-email-otp
+description: Enterprise passwordless email-OTP login for web and mobile — anti-enumeration, multi-dimensional rate limiting and Sanctum token issuance, all audited.
+---
+
 # laravel-rebel-email-otp
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-email-otp) · Composer package: `padosoft/laravel-rebel-email-otp`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-email-otp) · Composer: `padosoft/laravel-rebel-email-otp` · MIT
 
-## Motivazione
+> **Passwordless login that holds up in production.** A one-time code by email, with anti-enumeration baked in, rate limiting across four dimensions, and a Sanctum token pair for your mobile clients — every step recorded in the audit trail.
 
-Enterprise passwordless email-OTP login for Laravel Rebel: anti-enumeration, multi-dimensional rate-limiting, multi-tenant/purpose/risk, Sanctum token issuance. Part of padosoft/laravel-rebel-*.
+::: callout info
+Email-OTP is an **AAL1** factor (NIST 800-63B). It is great for low-friction login, but it is not phishing-resistant — pair it with passkeys and **[step-up](/packages/step-up)** for sensitive actions.
+:::
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+---
 
-## Teoria
+## What it is
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+`laravel-rebel-email-otp` delivers passwordless login: a user enters their email, receives a numeric one-time code, and verifies it. On success it returns a web login result or a Sanctum **`TokenPair`** (access + refresh) for API and mobile clients. The whole flow is tenant-, purpose- and risk-aware and emits audit events through the core vocabulary.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## The problem it solves
 
-## Design + diagramma
+Rolling your own email-OTP looks simple until you hit the hard parts: an attacker can probe which addresses exist (account enumeration), a single rate limit is trivially bypassed, and OTPs end up in logs. This package closes those gaps by design — the start endpoint always returns the same response whether or not the address exists, rate limiting is enforced across **IP, identifier, tenant and purpose**, and the code never reaches the audit log in cleartext.
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-email-otp]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## What you get
+
+- **Passwordless email-OTP** for web and mobile, with a Sanctum **`TokenPair`** for API clients.
+- **Anti-enumeration:** the same response is returned regardless of whether the identifier exists.
+- **Multi-dimensional rate limiting:** IP + identifier + tenant + purpose.
+- **Multi-tenant / multi-purpose / risk-aware** challenges out of the box.
+- **Audited outcomes:** verified logins are recorded as AAL1 with AMR `['otp', 'email']`.
+- **Lifecycle hygiene:** a console command prunes expired challenges.
+
+## When to use it
+
+- You want **passwordless login** for a web app, a mobile app, or both.
+- You need a login flow that is **safe against account enumeration** by default.
+- You serve **multiple tenants or purposes** and need challenges scoped per dimension.
+- You want login outcomes **in the audit trail** without wiring it yourself.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-email-otp
+php artisan vendor:publish
+php artisan migrate
 ```
 
-## Modello dati / contratto
+The package registers its web routes (`routes/web.php`) and an `EmailOtpController` that drives the start / resend / verify actions, plus a console command (`PruneChallengesCommand`) you can schedule to clear expired challenges.
+
+::: callout tip
+A verified challenge emits an audit event at **AAL1** with AMR `['otp', 'email']` — so an admin or risk engine can later tell that this session was established by email-OTP and not by a stronger factor.
+:::
+
+## How it fits
+
+This package builds directly on `padosoft/laravel-rebel-core`: it issues the Sanctum `TokenPair`, stores identifiers as keyed HMACs, and records verifications through the core audit trail. Because the verified factor carries its assurance level (AAL1, non-phishing-resistant), **[step-up](/packages/step-up)** can later require a stronger factor before a sensitive action proceeds.
+
+A purpose-built, audited, anti-enumeration OTP flow beats a hand-rolled one — see **[Why Rebel](/ecosystem/why-rebel)**.
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -88,7 +122,7 @@ None detected in the package tree.
 
 - `src\Console\PruneChallengesCommand.php`
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -98,7 +132,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -108,7 +142,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### ADR
 
 ::: collapsible "Problem: keep laravel-rebel-email-otp replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -122,15 +156,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-email-otp
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\EmailOtpFlowTest.php`
 - `tests\Feature\EmailOtpResendTest.php`

@@ -1,33 +1,59 @@
+---
+title: laravel-rebel-bridge-laragear-2fa
+description: Bridges laragear/two-factor into Rebel as an AAL2 TOTP step-up driver — authenticator apps and recovery codes, graded and fully audited.
+---
+
 # laravel-rebel-bridge-laragear-2fa
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-laragear-2fa) · Composer package: `padosoft/laravel-rebel-bridge-laragear-2fa`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-laragear-2fa) · Composer: `padosoft/laravel-rebel-bridge-laragear-2fa` · MIT
 
-## Motivazione
+> **Authenticator-app 2FA, graded and audited.** Bring laragear/two-factor's TOTP and recovery codes into Rebel as a proper AAL2 step-up factor — no secret ever touches the audit log.
 
-Bridge between laragear/two-factor and Laravel Rebel: exposes TOTP as an AAL2 step-up driver, integrates recovery codes, and emits full audit telemetry into the Rebel audit trail. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A bridge that registers laragear/two-factor as a Rebel step-up driver (`LaragearTotpStepUpDriver`). It validates a time-based one-time code (or a recovery code) through the `TwoFactorValidator` contract — backed by `LaragearTwoFactorValidator` — and reports an AAL2 / AMR `otp` outcome into Rebel's assurance model and audit trail. laragear keeps owning the TOTP secrets and QR provisioning.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Authenticator apps are a solid second factor, but laragear/two-factor on its own treats verification as a boolean and keeps its own state. Your app can't ask "was this user TOTP-verified strongly enough, and when?", and the outcome never reaches a shared audit trail. The bridge maps each verification to an AAL2 grade, folds in recovery codes, and records every result once in `rebel_auth_events` — without ever logging the code.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | What it does |
+|---|---|
+| **TOTP step-up driver** | `LaragearTotpStepUpDriver` exposes authenticator-app codes as an AAL2 (AMR `otp`) Rebel factor. |
+| **Recovery codes** | Recovery-code redemption is integrated into the same step-up flow. |
+| **Validator abstraction** | `TwoFactorValidator` contract with `LaragearTwoFactorValidator` as the default. |
+| **Full audit telemetry** | Every verification and recovery-code use is recorded through the core audit trail — never the secret. |
+| **Test double** | `FakeTwoFactorValidator` for deterministic tests. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-bridge-laragear-2fa]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You already use **laragear/two-factor** and want its TOTP graded and audited inside Rebel.
+- You want **authenticator-app 2FA** as a step-up factor for sensitive actions, without SMS costs.
+- You need **recovery codes** handled in the same audited step-up flow.
+- You're consolidating mixed factors onto one assurance scale and one audit trail.
+
+## When *not* to use it
+
+TOTP is AAL2, not phishing-resistant — a user can be tricked into entering a code on a fake page. For the highest assurance, pair it with **laravel-rebel-bridge-passkeys** (AAL3).
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-bridge-laragear-2fa
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+The bridge auto-registers `LaragearTotpStepUpDriver`; `config/rebel-bridge-laragear-2fa.php` exposes its options. Bind your own `TwoFactorValidator` to customize verification, or use `FakeTwoFactorValidator` in tests.
+
+## How it fits
+
+This package wraps **laragear/two-factor** (the upstream TOTP implementation) and registers it with **laravel-rebel-step-up** (the step-up consumer). It maps each verification onto the AAL/AMR model and audit contract from **laravel-rebel-core**, placing it at AAL2 — above email/SMS OTP equivalents in audit reasoning, below the phishing-resistant passkey bridge.
+
+A standalone 2FA package verifies a code; this one grades it AAL2 and audits it alongside every other factor. See **[Why Rebel](/ecosystem/why-rebel)**.
+
+## Reference
 
 ### Runtime files
 
@@ -78,7 +104,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -89,7 +115,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -101,7 +127,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### ADR
 
 ::: collapsible "Problem: keep laravel-rebel-bridge-laragear-2fa replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -115,15 +141,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-bridge-laragear-2fa
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test and verification surface
 
 - `tests\Feature\FakeTwoFactorValidatorTest.php`
 - `tests\Feature\LaragearTotpDriverTest.php`

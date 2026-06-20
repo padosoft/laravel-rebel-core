@@ -1,33 +1,76 @@
+---
+title: laravel-rebel-sessions
+description: A device and session registry for Laravel Rebel — track sessions and devices, log out everywhere, and rotate refresh tokens with reuse detection.
+---
+
 # laravel-rebel-sessions
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-sessions) · Composer package: `padosoft/laravel-rebel-sessions`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-sessions) · Composer: `padosoft/laravel-rebel-sessions` · MIT
 
-## Motivazione
+> **Know every session, trust every device, kill any of them.** A registry that tracks sessions and
+> devices, powers "log out everywhere", and rotates refresh tokens with **reuse detection** — so a
+> stolen token gets the whole family revoked, not replayed.
 
-Device/session registry for Laravel Rebel: session/device tracking, logout-everywhere, refresh-token rotation with reuse detection, and device trust. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+The device and session registry for the Rebel suite. It implements the core `SessionRegistry` and
+`DeviceTrust` contracts with a database-backed engine: every active session and known device is a
+row you can list, trust, or revoke. It's the package that turns "the user is logged in" into "the
+user is logged in on these three devices, and I can end any of them right now."
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+Laravel's stock session handling answers "is this request authenticated?" but not "where else is
+this account logged in, and can I trust this device?" When a phone is lost or a token leaks, you need
+to see every active session and end them — and you need refresh-token rotation that **detects reuse**:
+if an old refresh token reappears, that's a signal it was stolen, and the safe move is to revoke the
+whole token family rather than hand out a fresh one. Building that correctly is subtle and easy to
+get wrong; this package ships it as a tested, auditable default.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | What it does |
+|---|---|
+| **Session registry** | `DatabaseSessionRegistry` over `rebel_sessions` — list, track, and revoke active sessions. |
+| **Device trust** | `DatabaseDeviceTrust` over `rebel_devices` — remember and trust known devices. |
+| **Log out everywhere** | Revoke every session for an account in one operation. |
+| **Refresh-token rotation** | Rotate refresh tokens with **reuse detection** — a replayed token revokes the family. |
+| **Typed status model** | `SessionStatus` and `SessionType` enums describe each session precisely. |
+| **Orchestration** | `SessionManager` ties registry, device trust, and rotation together. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-sessions]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You issue refresh tokens and need **rotation with reuse detection**, not just expiry.
+- You want a user-facing "active sessions" / "log out everywhere" feature backed by real data.
+- You need **device trust** so a recognised device can skip friction a new one shouldn't.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-sessions
+php artisan vendor:publish
+php artisan migrate
 ```
 
-## Modello dati / contratto
+Publishing and migrating creates the `rebel_devices` and `rebel_sessions` tables. The package binds
+`DatabaseSessionRegistry` and `DatabaseDeviceTrust` to the core `SessionRegistry` and `DeviceTrust`
+contracts, so the rest of the suite resolves them automatically — and you drive sessions and device
+trust through `SessionManager` without coupling to the storage details.
+
+## How it fits
+
+This package depends only on `padosoft/laravel-rebel-core` for the contracts it implements. By
+fulfilling `SessionRegistry` and `DeviceTrust`, it becomes the registry every other Rebel package
+consults when it needs to know about sessions or device trust — and because those are contracts, you
+can swap this database engine for your own (Redis, an external IdP) without rewiring the suite.
+
+Session tracking, log-out-everywhere, and rotation-with-reuse-detection as one coherent package — not
+three half-features bolted onto stock sessions — is the Rebel difference. See
+[Why Rebel](/ecosystem/why-rebel).
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -84,7 +127,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -94,7 +137,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -104,7 +147,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### Architecture decisions
 
 ::: collapsible "Problem: keep laravel-rebel-sessions replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -118,15 +161,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-sessions
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\DeviceTrustTest.php`
 - `tests\Feature\SessionManagerTest.php`

@@ -1,64 +1,80 @@
+---
+title: Risk Model
+description: How Laravel Rebel evaluates risk alongside assurance — RiskAssessment, RiskLevel and RecommendedAction, the swappable RiskEvaluator contract, the signals it weighs, and how risk drives allow / step-up / deny.
+---
+
 # Risk Model
 
-## Motivazione
+> Assurance asks *"is this authentication strong enough?"* Risk asks *"is this attempt suspicious enough?"* A login can be perfectly strong and still be wrong — a valid passkey used from a brand-new device in a new country at 3am deserves a second look.
 
-`Risk Model` keeps the Laravel Rebel ecosystem understandable as separate packages evolve independently. Each package owns a narrow responsibility while the core package defines the shared language of assurance, context, audit and contracts.
+The two run side by side. [Assurance](/concepts/assurance-theory) sets a *floor* the action must clear; risk can *raise* that floor when the context smells off. Both feed one decision.
 
-## Teoria
+## The pieces
 
-Model an authentication decision as tuple $D=(s,a,c,r)$ where $s$ is subject, $a$ is assurance, $c$ is request context and $r$ is risk.
+The core ships three value objects and one contract:
 
-$$
-allowed(D, action)=assurance(D) \geq required(action) \land risk(D) \leq threshold(action)
-$$
+| Type | Role |
+|---|---|
+| `RiskAssessment` | The outcome of evaluating a request: its level, the signals that fired, and the recommended action. |
+| `RiskLevel` | The graded conclusion — e.g. low / elevated / high. |
+| `RecommendedAction` | What the policy should do next: **allow**, **step-up**, or **deny**. |
+| `RiskEvaluator` (contract) | The pluggable engine that produces a `RiskAssessment` from a request context. |
 
-## Design + diagramma
+`RiskEvaluator` is a [swappable contract](/packages/core): the suite ships a sensible default, but you bind your own in the container to plug a fraud engine, a device-reputation service, or an ML scorer — without changing a single line of the policy that consumes the result.
+
+## Signals it weighs
+
+A risk evaluator reads the [`SecurityContext`](/concepts/security-invariants) — where IP and user-agent are already keyed HMACs, never cleartext — and combines signals such as:
+
+- **New device** — the device fingerprint has never been seen for this subject.
+- **New IP / network** — first time from this hashed IP or ASN.
+- **Geo-velocity** — two logins from countries too far apart to travel between in the elapsed time ("impossible travel"). Country comes from the [audit geo header](/concepts/security-invariants) (default `CF-IPCountry`).
+- **Anomalous timing or rate** — bursts, off-hours, or rate-limit pressure.
+- **Bot / automation signals** — surfaced via the `BotProtection` contract.
+
+## Signal → recommended action
+
+Risk is a graded decision, not a tripwire. A single weak signal nudges; stacked signals escalate.
+
+| Signal pattern | Risk level | Recommended action |
+|---|---|---|
+| Known device, known IP, normal timing | Low | **Allow** |
+| New IP but known device | Elevated | **Step-up** (re-challenge) |
+| New device + new country | High | **Step-up**, prefer phishing-resistant |
+| Impossible travel / geo-velocity breach | High | **Step-up** or **deny** per policy |
+| Automation / bot signature on a sensitive action | High | **Deny**, fail-closed |
+
+::: callout info
+These mappings are policy, not gospel — they live in *your* `RiskEvaluator`. The core's job is to give every evaluator the same typed inputs and outputs so the rest of the suite reacts identically regardless of which engine you bind.
+:::
+
+## How risk and assurance combine
+
+The action declares a baseline assurance requirement. The risk assessment can demand *more* — or block outright. The decision is the composition of both:
 
 ```mermaid
-flowchart LR
-  Request[Request] --> Context[Security Context]
-  Context --> Risk[Risk Evaluation]
-  Risk --> Assurance[Assurance / AAL / AMR]
-  Assurance --> Decision[Allow, Step-up, Deny]
-  Decision --> Audit[Audit Event]
+flowchart TD
+  Req[Action requested] --> Asr{Assurance\nsatisfies baseline?}
+  Req --> Risk[RiskEvaluator\n→ RiskAssessment]
+  Risk --> Act{RecommendedAction}
+  Asr -->|no| Step[Step-up]
+  Asr -->|yes| Act
+  Act -->|allow| Go[Proceed]
+  Act -->|step-up| Step
+  Act -->|deny| Block[Block · fail-closed]
+  Go --> Audit[(rebel_auth_events)]
+  Step --> Audit
+  Block --> Audit
 ```
 
-## Modello dati / contratto
+The mental model is two gates in series:
 
-| Contract area | Owner | Notes |
-|---|---|---|
-| Assurance and AMR | `laravel-rebel-core` | Stable language shared by every package. |
-| Challenge lifecycle | OTP, step-up and bridge packages | Must be single-use and bounded by time. |
-| Delivery result | `laravel-rebel-channels` providers | Must not be confused with authentication success. |
-| Operations view | admin API and admin UI | Reads metrics, events and anomalies. |
+> **Allowed** when the assurance clears the action's floor **and** the risk assessment does not call for escalation or denial.
 
-## ADR
-
-::: collapsible "Problem: package boundaries can drift"
-Decision: keep feature packages small and document ownership in this central site.
-
-Consequences: installation is modular, but docs must explain composition instead of only individual APIs.
-:::
-
-::: collapsible "Problem: assurance evidence is provider-specific"
-Decision: normalize evidence through core contracts and value objects.
-
-Consequences: provider packages can change without changing application policy.
-:::
-
-## Worked example
-
-```php
-if (! $assurance->satisfies($required)) {
-    return $stepUp->challenge($user, purpose: 'change-payout-account');
-}
-
-$audit->record('rebel.action.confirmed', [
-    'purpose' => 'change-payout-account',
-    'aal' => $assurance->level()->value,
-]);
-```
+If either gate is unhappy, the safe default is to escalate (step-up) rather than wave the request through — and when in genuine doubt, to deny. That **fail-closed** posture is one of the suite's [security invariants](/concepts/security-invariants). When risk forces a step-up on a high-value action, the challenge can be bound to the transaction itself (amount + payee) via [PSD2/SCA dynamic linking](/guides/step-up-sca).
 
 ::: callout warning
-Never log OTP codes, recovery secrets, passkey raw challenges, provider tokens or webhook secrets.
+A step-up driven by risk must result in a *higher* assurance, not a repeat of the same factor. Re-sending the same email-OTP after a high-risk signal does not raise assurance — escalate toward a phishing-resistant factor where the action warrants it.
 :::
+
+Every assessment and every resulting decision is written to the audit trail, so a reviewer can later reconstruct exactly which signals fired and why the request was allowed, escalated or blocked.

@@ -1,33 +1,80 @@
+---
+title: laravel-rebel-admin-api
+description: The control-plane JSON API for Laravel Rebel — security metrics, an audit-event explorer, OTP/step-up funnels and provider health, permission-gated and tenant-scoped.
+---
+
 # laravel-rebel-admin-api
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-admin-api) · Composer package: `padosoft/laravel-rebel-admin-api`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-admin-api) · Composer: `padosoft/laravel-rebel-admin-api` · MIT
 
-## Motivazione
+> **The read models behind your security operations.** A JSON API that turns `rebel_auth_events`
+> into overview metrics, an audit-event explorer, OTP/step-up funnels and provider health — every
+> endpoint **permission-gated** and **tenant-scoped**. API only, no UI.
 
-Control-plane JSON API for Laravel Rebel: security metrics, audit-event explorer, OTP/step-up funnels, provider health, with permission-gated and tenant-scoped read models. Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+The control-plane API for the Laravel Rebel suite. It projects raw audit events into queryable read
+models — overviews, funnels, anomalies, channel and provider health, compliance and subject lookups —
+and serves them over a clean JSON surface guarded by the `EnsureAdmin` middleware. It is deliberately
+**headless**: bring your own UI, or pair it with `laravel-rebel-admin` for the ready-made panel.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+The audit trail in `rebel_auth_events` is honest and complete, but it's raw. Answering "what's our
+OTP delivery rate this week?", "where are users dropping out of step-up?" or "which provider is
+degraded right now?" means aggregation, time bucketing, and — critically — making sure an admin only
+sees their own tenant's data. This package builds those read models once, behind permission checks and
+tenant scoping, so you never hand-roll a dashboard query against sensitive event data again.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | Endpoint surface |
+|---|---|
+| **Overview & metrics** | `OverviewController`, `MetricsProjector`, `MetricBucket` — time-bucketed security KPIs. |
+| **Audit-event explorer** | `AuthEventsController` — query and drill into `rebel_auth_events`. |
+| **Funnels** | `FunnelController` — OTP / step-up conversion and drop-off. |
+| **Anomalies** | `AnomaliesController` — anomaly cases surfaced for review. |
+| **Channels & providers** | `ChannelsController`, `ProvidersController`, `HealthController` — delivery and provider health. |
+| **Risk rules** | `RiskRulesController`, `RiskRuleEvaluator`, `RiskRule` — configurable rule read/write. |
+| **Compliance & subjects** | `ComplianceController`, `SubjectsController`, `MeController`. |
+| **Settings & copilot** | `SettingsController` (`AdminSetting`), `AiCopilotController`. |
+| **Guarded & scoped** | `EnsureAdmin` middleware + `ResolvesTenant` — permission-gated, tenant-scoped. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-admin-api]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You want **security KPIs and funnels** without writing aggregation queries against raw events.
+- You're building a **custom admin UI** and need a stable, guarded JSON contract to call.
+- You need read models that are **tenant-scoped and permission-gated** out of the box.
+- You're installing `laravel-rebel-admin` (the panel) — it sits on top of this API.
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-admin-api
+php artisan vendor:publish
+php artisan migrate
 ```
 
-## Modello dati / contratto
+Routes are registered from the package's `routes/api.php` behind the `EnsureAdmin` middleware. Build
+metric buckets with the bundled command:
+
+```bash
+php artisan rebel:project-metrics
+```
+
+## How it fits
+
+The admin API is the **read side** of the suite. It consumes the audit trail from
+`laravel-rebel-core`, projects it into `MetricBucket` and related models, and serves it to whatever
+front-end you choose. `laravel-rebel-admin` is the official consumer; the AI guard reads the same
+buckets and rules. Everything stays tenant-scoped and permission-gated by construction.
+
+A control-plane API that's headless, tenant-scoped and built directly on an auditable event store is
+the hard part most dashboards skip — see **[Why Rebel](/ecosystem/why-rebel)**.
+
+---
+
+## Reference
 
 ### Runtime files
 
@@ -113,7 +160,7 @@ None detected in the package tree.
 
 - `src\Console\ProjectMetricsCommand.php`
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -123,7 +170,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -136,7 +183,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### Architecture decisions
 
 ::: collapsible "Problem: keep laravel-rebel-admin-api replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -150,15 +197,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-admin-api
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test & verification surface
 
 - `tests\Feature\AdminGateTest.php`
 - `tests\Feature\AiCopilotTest.php`

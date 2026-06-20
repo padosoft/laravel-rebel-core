@@ -1,33 +1,58 @@
+---
+title: laravel-rebel-bridge-otpz
+description: Bridges benbjurstrom/otpz into Rebel as an email magic-code step-up driver (AAL2, AMR otp) — graded on the assurance model and fully audited.
+---
+
 # laravel-rebel-bridge-otpz
 
-[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-otpz) · Composer package: `padosoft/laravel-rebel-bridge-otpz`
+[GitHub repository](https://github.com/padosoft/laravel-rebel-bridge-otpz) · Composer: `padosoft/laravel-rebel-bridge-otpz` · MIT
 
-## Motivazione
+> **Email magic codes as a first-class factor.** Bring benbjurstrom/otpz into Rebel as an AAL2 step-up driver — graded, swappable and fully audited, with the code never written to the log.
 
-Bridge the benbjurstrom/otpz email one-time-password package into Laravel Rebel step-up. Exposes OTP email magic-code as a step-up driver (AAL2, AMR otp). Part of padosoft/laravel-rebel-*.
+## What it is
 
-This package participates in the Laravel Rebel ecosystem by contributing one bounded capability to the authentication control plane.
+A bridge that registers benbjurstrom/otpz as a Rebel step-up driver (`OtpzStepUpDriver`). It issues and verifies an email magic-code through the `OtpzBroker` contract — backed by `OtpzBrokerImpl` — and reports an AAL2 / AMR `otp` outcome into Rebel's assurance model and audit trail. otpz keeps owning code generation, delivery and expiry.
 
-## Teoria
+## The problem it solves
 
-A Rebel package should expose a capability $C$ without redefining the global assurance model $A$. Formally, the package contributes evidence $e$ and configuration $k$:
+otpz is a clean way to send email magic codes, but on its own it has no shared assurance grade and no cross-package audit trail, and the code can easily end up in logs. The bridge maps each verification to an AAL2 grade, records every send and outcome once in `rebel_auth_events`, and routes the secret through the core redactor so it never leaks.
 
-$$
-C(package)=f(e,k) \quad \text{while} \quad A \in core
-$$
+## What you get
 
-## Design + diagramma
+| Capability | What it does |
+|---|---|
+| **Magic-code step-up driver** | `OtpzStepUpDriver` exposes email magic codes as an AAL2 (AMR `otp`) Rebel factor. |
+| **Broker abstraction** | `OtpzBroker` contract with `OtpzBrokerImpl` as the default otpz-backed implementation. |
+| **Full audit telemetry** | Every challenge and verification is recorded through the core audit trail — never the code. |
+| **Test double** | `FakeOtpzBroker` for deterministic issue/verify tests. |
 
-```mermaid
-flowchart LR
-  App[Laravel app] --> Package[laravel-rebel-bridge-otpz]
-  Package --> Core[laravel-rebel-core contracts]
-  Package --> Config[Config / migrations / routes]
-  Package --> Tests[Test suite]
-  Core --> Audit[Audit and assurance]
+## When to use it
+
+- You already use **benbjurstrom/otpz** and want it graded and audited inside Rebel.
+- You want **email magic codes** as a low-friction step-up factor.
+- You want a familiar email-based fallback alongside stronger factors, on one assurance scale.
+- You're consolidating mixed providers into a single audit trail.
+
+## When *not* to use it
+
+Email magic codes are AAL2, not phishing-resistant — a code can be relayed to an attacker. For high-value actions, pair it with **laravel-rebel-bridge-passkeys** (AAL3).
+
+## Worked example
+
+```bash
+composer require padosoft/laravel-rebel-bridge-otpz
+php artisan vendor:publish
 ```
 
-## Modello dati / contratto
+The bridge auto-registers `OtpzStepUpDriver`; `config/rebel-bridge-otpz.php` exposes its options. Bind your own `OtpzBroker` to customize issuing and delivery, or use `FakeOtpzBroker` in tests.
+
+## How it fits
+
+This package wraps **benbjurstrom/otpz** (the upstream email magic-code implementation) and registers it with **laravel-rebel-step-up** (the step-up consumer). It maps each verification onto the AAL/AMR model and audit contract from **laravel-rebel-core**, placing email magic codes at AAL2 (AMR `otp`) — below the phishing-resistant passkey bridge in audit reasoning.
+
+A standalone OTP package emails a code; this one grades it AAL2, redacts the secret and audits it alongside every other factor. See **[Why Rebel](/ecosystem/why-rebel)**.
+
+## Reference
 
 ### Runtime files
 
@@ -80,7 +105,7 @@ None detected in the package tree.
 
 None detected in the package tree.
 
-## Composer requirements
+### Composer requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -91,7 +116,7 @@ None detected in the package tree.
 | `php` | `^8.3` |
 | `spatie/laravel-package-tools` | `^1.92` |
 
-## Development requirements
+### Development requirements
 
 | Dependency | Constraint |
 |---|---|
@@ -102,7 +127,7 @@ None detected in the package tree.
 | `pestphp/pest` | `^4.0` |
 | `pestphp/pest-plugin-laravel` | `^4.0` |
 
-## ADR
+### ADR
 
 ::: collapsible "Problem: keep laravel-rebel-bridge-otpz replaceable"
 Decision: document its public responsibility and use Rebel core contracts at integration boundaries.
@@ -116,15 +141,7 @@ Decision: all security-significant outcomes should emit or feed audit events thr
 Consequences: admin API, admin UI and AI guard can reason across packages without bespoke parsers for every provider.
 :::
 
-## Worked example
-
-```bash
-composer require padosoft/laravel-rebel-bridge-otpz
-php artisan vendor:publish
-php artisan migrate
-```
-
-## Test and verification surface
+### Test and verification surface
 
 - `tests\Feature\OtpzDriverTest.php`
 - `tests\Fixtures\User.php`

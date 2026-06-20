@@ -1,64 +1,102 @@
+---
+title: Testing Strategy
+description: How to test Rebel-based code — Pest + Testbench, PHPStan-max discipline with fix-don't-silence recipes, FakeClock for time-based flows, the four coverage pillars, and the CI matrix.
+---
+
 # Testing Strategy
 
-## Motivazione
+> Security code earns trust by being *provably* correct, not plausibly correct. Rebel's testing
+> strategy is opinionated for a reason: deterministic time, static analysis at the strictest setting,
+> and four coverage pillars that catch the failures auth code actually has.
 
-`Testing Strategy` keeps the Laravel Rebel ecosystem understandable as separate packages evolve independently. Each package owns a narrow responsibility while the core package defines the shared language of assurance, context, audit and contracts.
+The toolchain is **Pest** on **Orchestra Testbench**, with **PHPStan level MAX** and **Pint** for
+style. Every PHP file is `declare(strict_types=1)`, every class is `final`, and dependencies arrive via
+constructor property promotion — which also makes them trivial to fake in a test.
 
-## Teoria
+---
 
-Model an authentication decision as tuple $D=(s,a,c,r)$ where $s$ is subject, $a$ is assurance, $c$ is request context and $r$ is risk.
+## PHPStan level MAX — fix, never silence
 
-$$
-allowed(D, action)=assurance(D) \geq required(action) \land risk(D) \leq threshold(action)
-$$
+Level MAX must stay green. The rule is absolute: **do not** reach for `@phpstan-ignore`, a baseline
+entry, `assert()`, or an inline `@var` to make an error disappear. Those hide the bug; they don't fix
+it. Resolve the root cause instead.
 
-## Design + diagramma
+| Error shape | Fix (not silence) |
+|---|---|
+| `mixed` flowing into a cast | Narrow first: `is_scalar($x) ? (string) $x : null`. |
+| `json_decode($s, true)` typed loosely | It is `array<array-key, mixed>` — narrow each key before use. |
+| `make('request')` looks untyped | The container's `make('request')` is already typed `Illuminate\Http\Request`. |
+| Large scan eats memory | Use `cursor()` rather than `get()`. |
+| Cross-tenant admin read | `withoutGlobalScopes()` deliberately, with an audited reason. |
+| Nested `where(fn ($q) => …)` | The closure receives `Illuminate\Database\Eloquent\Builder`. |
 
-```mermaid
-flowchart LR
-  Request[Request] --> Context[Security Context]
-  Context --> Risk[Risk Evaluation]
-  Risk --> Assurance[Assurance / AAL / AMR]
-  Assurance --> Decision[Allow, Step-up, Deny]
-  Decision --> Audit[Audit Event]
-```
+---
 
-## Modello dati / contratto
+## Deterministic time with FakeClock
 
-| Contract area | Owner | Notes |
-|---|---|---|
-| Assurance and AMR | `laravel-rebel-core` | Stable language shared by every package. |
-| Challenge lifecycle | OTP, step-up and bridge packages | Must be single-use and bounded by time. |
-| Delivery result | `laravel-rebel-channels` providers | Must not be confused with authentication success. |
-| Operations view | admin API and admin UI | Reads metrics, events and anomalies. |
-
-## ADR
-
-::: collapsible "Problem: package boundaries can drift"
-Decision: keep feature packages small and document ownership in this central site.
-
-Consequences: installation is modular, but docs must explain composition instead of only individual APIs.
-:::
-
-::: collapsible "Problem: assurance evidence is provider-specific"
-Decision: normalize evidence through core contracts and value objects.
-
-Consequences: provider packages can change without changing application policy.
-:::
-
-## Worked example
+Time-based flows — OTP expiry, step-up windows — must be tested without `sleep()`. Rebel injects a
+PSR-20 `Clock`; in tests, bind `FakeClock` and advance it by hand so expirations are exact and fast.
 
 ```php
-if (! $assurance->satisfies($required)) {
-    return $stepUp->challenge($user, purpose: 'change-payout-account');
-}
+use Padosoft\Rebel\Core\Clock\FakeClock;
 
-$audit->record('rebel.action.confirmed', [
-    'purpose' => 'change-payout-account',
-    'aal' => $assurance->level()->value,
-]);
+$clock = new FakeClock(now());
+$otp   = $issueOtp($clock);            // minted "now"
+
+$clock->advance(seconds: 299);
+expect($verify($otp, $clock))->toBeTrue();   // still inside the window
+
+$clock->advance(seconds: 2);
+expect($verify($otp, $clock))->toBeFalse();  // expired — deterministically
 ```
 
+::: callout tip
+A `FakeClock` turns a flaky "wait and hope" expiry test into a precise boundary test: one assertion
+just inside the window, one just outside it.
+:::
+
+---
+
+## The four coverage pillars
+
+Every security-significant change covers all four. Skip one and you've tested the demo, not the system.
+
+::: grids
+::: grid
+::: card "Happy path" icon:check
+The intended flow succeeds and emits the expected audit event.
+:::
+::: card "Auth / fail-closed" icon:lock
+When a check can't pass — bad credential, missing assurance, error — the system **denies**, it does not
+fall open.
+:::
+::: card "Tenant scoping" icon:building
+A tenant sees only its own data; cross-tenant reads require an explicit, audited scope removal.
+:::
+::: card "Empty state" icon:inbox
+No data behaves honestly — empty lists, zero counts — and never fabricates results.
+:::
+:::
+:::
+
+---
+
+## CI matrix
+
+Green locally isn't done — the matrix must be green too. Tests run across every supported combination:
+
+| PHP | Laravel |
+|---|---|
+| 8.3 · 8.4 · 8.5 | 12 · 13 |
+
+That's six cells; all six must pass before merge.
+
 ::: callout warning
-Never log OTP codes, recovery secrets, passkey raw challenges, provider tokens or webhook secrets.
+Tenant scoping deserves its own test even when it "obviously works" — a missing `BelongsToTenant` or a
+forgotten global scope is exactly the kind of silent gap that only a fail-closed test catches.
+:::
+
+::: callout info
+Some of these constraints are deliberate boundaries, not bugs — know which ones before you write the
+test. See **[Gotchas & Limits](/best-practices/gotchas-limits)**.
 :::
