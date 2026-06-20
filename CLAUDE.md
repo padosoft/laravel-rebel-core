@@ -62,6 +62,16 @@ a core **contract** (`src/Contracts/`) in the container:
 This repo ships invocable skills under `.claude/skills/` — at least `rebel-package-dev` (the dev
 loop + PHPStan-max recipes). Invoke it before non-trivial work.
 
+## DocMD documentation rules
+- The public Laravel Rebel documentation is centralized in `docs-site/`, never `doc-site/`.
+- Cloudflare Pages must use root directory `docs-site`, build command `npm run build`, output `_site`,
+  and Node from `docs-site/.node-version`.
+- After touching docs dependencies, run `npm ci --progress=false` from `docs-site/`. Cloudflare uses a
+  clean install, so `package.json` and `package-lock.json` must be perfectly in sync.
+- Keep `docmd-search` compatible with `@docmd/core` peer requirements. If `@docmd/core` requires
+  `docmd-search >=0.1.0-alpha.1`, do not leave the lockfile on `0.1.0-alpha.0`.
+- Before pushing docs changes: `npm run check` and `npm run build` must pass from `docs-site/`.
+
 ## Session startup
 At the start of each session, in this order:
 1. Read `docs/LESSON.md` (accumulated knowledge — applies to you and every subagent).

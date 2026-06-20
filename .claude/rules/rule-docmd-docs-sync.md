@@ -8,9 +8,12 @@ Before closing the work, run:
 
 ```bash
 cd docs-site
+npm ci --progress=false
 npm run check
 npm run build
 ```
+
+Cloudflare Pages runs a clean install before the build. Therefore `package.json` and `package-lock.json` must be in sync before every push. If docs dependencies change, validate with `npm ci --progress=false`, not only with `npm install`. Keep `docmd-search` compatible with the peer requirements declared by `@docmd/core`; do not leave the lockfile on `docmd-search@0.1.0-alpha.0` when `@docmd/core` requires `>=0.1.0-alpha.1`.
 
 A docs update is not required for purely internal refactors, dependency-only tooling fixes, test-only cleanup, or cosmetic formatting. If skipped, state why in the PR or changelog.
 

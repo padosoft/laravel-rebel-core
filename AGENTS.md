@@ -40,6 +40,15 @@ Ogni sotto-task ha: **obiettivo preciso**, **dettagli implementativi**, **guardr
 ## README = step finale obbligatorio di ogni package (DIDATTICO)
 Il README "wow" è l'ultimo sotto-task prima della PR. Deve essere **prolisso e didattico**: un **junior / non-esperto di auth** deve capire **subito** cosa fa, come funziona (passo-passo + ASCII), come si monta (install a prova di junior), **ogni opzione di config** (tabella nome/default/effetto), con **molti esempi** copia-incolla (≥4-6 per package; web + mobile/Sanctum + casi d'errore). Glossario dei termini (OTP, step-up, AAL, passkey, dynamic linking). I README di `core` e del meta `auth` spiegano **l'intero ecosistema** (mappa package + dependency DAG + flussi end-to-end). Skeleton: `docs/README-standard.md` nel repo docs di analisi.
 
+## DocMD docs centralizzate e Cloudflare Pages
+- La documentazione pubblica dell'ecosistema Laravel Rebel vive in `laravel-rebel-core/docs-site/`. Non usare `doc-site/` e non creare doc-site locali nei singoli package Rebel.
+- Cloudflare Pages deve puntare a: root directory `docs-site`, build command `npm run build`, output `_site`, Node letto da `.node-version`.
+- Ogni nuova pagina Markdown deve stare in `docs-site/docs/**` ed essere registrata in `docs-site/docmd.config.json` `navigation[]`.
+- La ricerca semantica richiede `.docmd-search/config.json` committato. Ignora cache, `_site/` e `node_modules/`.
+- Prima di chiudere o pushare una modifica docs: da `docs-site/` esegui `npm ci --progress=false`, `npm run check`, `npm run build`.
+- Non basta `npm install`: Cloudflare usa `npm ci`/clean-install e fallisce se `package.json` e `package-lock.json` non sono sincronizzati.
+- Mantieni `docmd-search` compatibile con i peer di `@docmd/core`. Se il lock contiene `docmd-search@0.1.0-alpha.0` ma `@docmd/core` richiede `>=0.1.0-alpha.1`, aggiorna `package.json` e `package-lock.json` prima del push.
+
 ## Sicurezza (design-lock)
 Rispetta `docs/adr/ADR-0005-design-lock.md` (nel repo `core`): ULID/UUID, `code_salt`+`key_version`, verifica OTP atomica (Redis Lua/DB lock), timing anti-enumeration (Clock PSR-20), idempotency, rotazione pepper, `LoginResult`/`TokenIssuer` (Sanctum), `binding_hash` SCA, `rebel:validate-config`, forma errore JSON normalizzata, redaction log, testing fakes. Mai OTP/secret nei log.
 

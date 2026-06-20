@@ -11,6 +11,7 @@ Commands:
 
 ```bash
 cd docs-site
+npm ci --progress=false
 npm run dev
 npm run check
 npm run build
@@ -26,4 +27,6 @@ Rules:
 - For deep pages, include motivation, theory, Mermaid design, data/contract, ADR, worked example and gotchas.
 - README files in all `laravel-rebel-*` packages must link to the centralized docs URL.
 - Cloudflare Pages: root directory `docs-site`, build command `npm run build`, output `_site`, Node pinned by `.node-version`.
+- Before closing or pushing docs dependency changes, run `npm ci --progress=false`; Cloudflare Pages uses clean install and fails when `package.json` and `package-lock.json` diverge.
+- Keep `docmd-search` aligned with `@docmd/core` peer requirements. Do not ship a lockfile with `docmd-search@0.1.0-alpha.0` when `@docmd/core` requires `>=0.1.0-alpha.1`.
 
