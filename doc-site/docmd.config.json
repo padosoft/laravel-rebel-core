@@ -1,0 +1,370 @@
+{
+  "title": "Laravel Rebel",
+  "description": "Centralized documentation for the padosoft/laravel-rebel-* enterprise authentication ecosystem.",
+  "url": "https://doc.laravel-rebel.padosoft.com",
+  "src": "docs",
+  "out": "_site",
+  "base": "/",
+  "favicon": "assets/favicon.svg",
+  "theme": {
+    "name": "default",
+    "defaultMode": "dark",
+    "customCss": [
+      "assets/custom.css"
+    ]
+  },
+  "autoTitleFromH1": true,
+  "copyCode": true,
+  "pageNavigation": true,
+  "minify": true,
+  "markdown": {
+    "breaks": true
+  },
+  "layout": {
+    "spa": true,
+    "header": {
+      "enabled": true
+    },
+    "sidebar": {
+      "collapsible": true,
+      "defaultCollapsed": false
+    },
+    "optionsMenu": {
+      "position": "header",
+      "components": {
+        "search": true,
+        "themeSwitch": true
+      }
+    }
+  },
+  "footer": {
+    "style": "minimal",
+    "branding": true,
+    "content": "© Padosoft — [Padosoft](https://www.padosoft.com) · [GitHub](https://github.com/padosoft/laravel-rebel-core) · MIT",
+    "columns": [
+      {
+        "title": "Project",
+        "links": [
+          {
+            "title": "Core repository",
+            "path": "https://github.com/padosoft/laravel-rebel-core",
+            "external": true
+          }
+        ]
+      }
+    ]
+  },
+  "navigation": [
+    {
+      "title": "Get Started",
+      "icon": "rocket",
+      "children": [
+        {
+          "title": "Introduction",
+          "path": "/"
+        },
+        {
+          "title": "Quickstart",
+          "path": "/quickstart"
+        },
+        {
+          "title": "Install Matrix",
+          "path": "/install-matrix"
+        }
+      ]
+    },
+    {
+      "title": "Ecosystem",
+      "icon": "network",
+      "children": [
+        {
+          "title": "Package Map",
+          "path": "/ecosystem/package-map"
+        },
+        {
+          "title": "Dependency Graph",
+          "path": "/ecosystem/dependency-graph"
+        },
+        {
+          "title": "Capability Matrix",
+          "path": "/ecosystem/capability-matrix"
+        }
+      ]
+    },
+    {
+      "title": "Guides",
+      "icon": "book-open",
+      "children": [
+        {
+          "title": "Passwordless Login",
+          "path": "/guides/passwordless-login"
+        },
+        {
+          "title": "Step-up and SCA",
+          "path": "/guides/step-up-sca"
+        },
+        {
+          "title": "Channels and Fallback",
+          "path": "/guides/channels-fallback"
+        },
+        {
+          "title": "Admin Operations",
+          "path": "/guides/admin-operations"
+        },
+        {
+          "title": "AI Guard",
+          "path": "/guides/ai-guard"
+        },
+        {
+          "title": "Worked Example",
+          "path": "/guides/worked-example"
+        }
+      ]
+    },
+    {
+      "title": "Concetti & Teoria",
+      "icon": "brain",
+      "children": [
+        {
+          "title": "Motivazione",
+          "path": "/concepts/motivazione"
+        },
+        {
+          "title": "Assurance Theory",
+          "path": "/concepts/assurance-theory"
+        },
+        {
+          "title": "Risk Model",
+          "path": "/concepts/risk-model"
+        },
+        {
+          "title": "Security Invariants",
+          "path": "/concepts/security-invariants"
+        }
+      ]
+    },
+    {
+      "title": "Architettura",
+      "icon": "boxes",
+      "children": [
+        {
+          "title": "Overview",
+          "path": "/architecture/overview"
+        },
+        {
+          "title": "Pipeline Workflow",
+          "path": "/architecture/pipeline-workflow"
+        },
+        {
+          "title": "Data Model and Contracts",
+          "path": "/architecture/data-model-contract"
+        },
+        {
+          "title": "ADR",
+          "path": "/architecture/adr"
+        }
+      ]
+    },
+    {
+      "title": "Best Practices",
+      "icon": "shield-check",
+      "children": [
+        {
+          "title": "Package Boundaries",
+          "path": "/best-practices/package-boundaries"
+        },
+        {
+          "title": "Secrets and PII",
+          "path": "/best-practices/secrets-pii"
+        },
+        {
+          "title": "Testing Strategy",
+          "path": "/best-practices/testing-strategy"
+        },
+        {
+          "title": "Gotchas and Limits",
+          "path": "/best-practices/gotchas-limits"
+        }
+      ]
+    },
+    {
+      "title": "Operations",
+      "icon": "activity",
+      "children": [
+        {
+          "title": "Cloudflare Pages",
+          "path": "/operations/cloudflare-pages"
+        },
+        {
+          "title": "Runbooks",
+          "path": "/operations/runbooks"
+        },
+        {
+          "title": "Release Checklist",
+          "path": "/operations/release-checklist"
+        },
+        {
+          "title": "Docs Maintenance",
+          "path": "/operations/docs-maintenance"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "icon": "braces",
+      "children": [
+        {
+          "title": "Package Reference",
+          "path": "/reference/packages"
+        },
+        {
+          "title": "Configuration",
+          "path": "/reference/configuration"
+        },
+        {
+          "title": "CLI and APIs",
+          "path": "/reference/cli-api"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "icon": "package",
+      "children": [
+        {
+          "title": "laravel-rebel-bridge-passkeys",
+          "path": "/packages/bridge-passkeys"
+        },
+        {
+          "title": "laravel-rebel-bridge-spatie-otp",
+          "path": "/packages/bridge-spatie-otp"
+        },
+        {
+          "title": "laravel-rebel-channel-bird",
+          "path": "/packages/channel-bird"
+        },
+        {
+          "title": "laravel-rebel-channel-discord",
+          "path": "/packages/channel-discord"
+        },
+        {
+          "title": "laravel-rebel-channels",
+          "path": "/packages/channels"
+        },
+        {
+          "title": "laravel-rebel-channel-telegram",
+          "path": "/packages/channel-telegram"
+        },
+        {
+          "title": "laravel-rebel-channel-twilio",
+          "path": "/packages/channel-twilio"
+        },
+        {
+          "title": "laravel-rebel-channel-vonage",
+          "path": "/packages/channel-vonage"
+        },
+        {
+          "title": "laravel-rebel-core",
+          "path": "/packages/core"
+        },
+        {
+          "title": "laravel-rebel-demo",
+          "path": "/packages/demo"
+        },
+        {
+          "title": "laravel-rebel-email-otp",
+          "path": "/packages/email-otp"
+        },
+        {
+          "title": "laravel-rebel-recovery",
+          "path": "/packages/recovery"
+        },
+        {
+          "title": "laravel-rebel-sessions",
+          "path": "/packages/sessions"
+        },
+        {
+          "title": "laravel-rebel-step-up",
+          "path": "/packages/step-up"
+        },
+        {
+          "title": "laravel-rebel-admin",
+          "path": "/packages/admin"
+        },
+        {
+          "title": "laravel-rebel-admin-api",
+          "path": "/packages/admin-api"
+        },
+        {
+          "title": "laravel-rebel-ai-guard",
+          "path": "/packages/ai-guard"
+        },
+        {
+          "title": "laravel-rebel-auth",
+          "path": "/packages/auth"
+        },
+        {
+          "title": "laravel-rebel-bot-protection",
+          "path": "/packages/bot-protection"
+        },
+        {
+          "title": "laravel-rebel-bridge-fortify",
+          "path": "/packages/bridge-fortify"
+        },
+        {
+          "title": "laravel-rebel-bridge-laragear-2fa",
+          "path": "/packages/bridge-laragear-2fa"
+        },
+        {
+          "title": "laravel-rebel-bridge-otpz",
+          "path": "/packages/bridge-otpz"
+        }
+      ]
+    },
+    {
+      "title": "Links",
+      "children": [
+        {
+          "title": "GitHub",
+          "path": "https://github.com/padosoft/laravel-rebel-core",
+          "external": true
+        }
+      ]
+    }
+  ],
+  "plugins": {
+    "search": {
+      "enabled": true,
+      "semantic": true,
+      "placeholder": "Search the Rebel docs…"
+    },
+    "git": {
+      "repo": "https://github.com/padosoft/laravel-rebel-core",
+      "branch": "main",
+      "editLink": true,
+      "lastUpdated": true,
+      "commitHistory": true,
+      "dateFormat": "relative"
+    },
+    "seo": {
+      "defaultDescription": "Centralized documentation for the Laravel Rebel authentication ecosystem.",
+      "aiBots": true,
+      "openGraph": {},
+      "twitter": {
+        "cardType": "summary_large_image"
+      }
+    },
+    "sitemap": {
+      "defaultChangefreq": "weekly",
+      "defaultPriority": 0.8
+    },
+    "mermaid": {},
+    "math": {},
+    "llms": {
+      "fullContext": true
+    },
+    "analytics": {
+      "enabled": false
+    }
+  }
+}

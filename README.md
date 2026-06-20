@@ -1,5 +1,8 @@
 # Laravel Rebel — Core
 
+> Official documentation: https://doc.laravel-rebel.padosoft.com
+
+
 > **The heart of the `padosoft/laravel-rebel-*` ecosystem: an enterprise authentication _control plane_ for Laravel** (passwordless OTP, passkey-first, risk-based step-up, SCA, multi-tenant, admin, AI). This `-core` package contains the shared "building blocks" (value objects, contracts, assurance, audit, hashing) that all the others rest on.
 
 <p align="center">
@@ -410,3 +413,4 @@ composer pint       # code style
 ## License
 
 MIT — see [LICENSE](LICENSE). © Padosoft.
+

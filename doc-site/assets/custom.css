@@ -1,0 +1,3 @@
+:root { --docmd-color-primary: #b91c1c; --color-primary: #b91c1c; --link-color: #b91c1c; }
+:root[data-theme="dark"], .dark { --docmd-color-primary: #b91c1c; }
+a { color: var(--link-color, #b91c1c); }
